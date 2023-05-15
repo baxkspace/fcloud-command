@@ -63,6 +63,7 @@ int main(int argc, char* argv[]){
 		int fpsize = fread(buf, 1, 256, file);
 		nsize += fpsize;
 		send(clnt_sock, buf, fpsize, 0);
+		printf("success\n");
 	}
 	fclose(file);
 
