@@ -27,37 +27,38 @@ int main(int argc, char* argv[]){
 		error_handling("read error");
 	printf("Message from server :%s\n",message);
 
-	char *msge;
+	char msge[100];
 
 	scanf("%s",msge);
 
 
 	//write(clnt_sock, msge, strlen(msge));
 
-	size_t fsize, nsize = 0;
+	size_t nsize = 0, fsize;
 	size_t fsize2;
 
 	char buf[256];
     FILE* file = NULL;
     /* 전송할 파일 이름을 작성합니다 */
-	file = fopen(msge, "rb");
-	printf("1\n");
+	if((file = fopen(msge, "rb")) == NULL){
+		printf("file not exists\n");
+	}
     /* 파일 크기 계산 */
     // move file pointer to end
 	fseek(file, 0, SEEK_END);
 	// calculate file size
 	fsize=ftell(file);
+	printf("%ld", fsize);
 	// move file pointer to first
 	fseek(file, 0, SEEK_SET);
 	
-	printf("2\n");
 	// send file size first
-	// fsize2 = htonl(fsize);
+	 fsize2 = htonl(fsize);
 	// send file size
-	// send(serv_sock, &fsize2, sizeof(fsize), 0);
+	 send(clnt_sock, &fsize2, sizeof(fsize), 0);
 
 	// send file contents
-	while (nsize!=fsize) {
+	while (nsize != fsize) {
 		// read from file to buf
 		// 1byte * 256 count = 256byte => buf[256];
 		int fpsize = fread(buf, 1, 256, file);
