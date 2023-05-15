@@ -37,7 +37,7 @@ int main(int argc, char* argv[]){
 	size_t fsize, nsize = 0;
 	size_t fsize2;
 
-	char buf[256];
+	char buf[BUFSIZ];
     FILE* file = NULL;
     /* 전송할 파일 이름을 작성합니다 */
 	file = fopen(msg, "rb");
@@ -49,7 +49,7 @@ int main(int argc, char* argv[]){
 	fsize=ftell(file);
 	// move file pointer to first
 	fseek(file, 0, SEEK_SET);
-	write(clnt_sock, msg, strlen(msg));
+	//////write(clnt_sock, msg, strlen(msg));
 	printf("2\n");
 	// send file size first
 	// fsize2 = htonl(fsize);
@@ -57,7 +57,7 @@ int main(int argc, char* argv[]){
 	// send(serv_sock, &fsize2, sizeof(fsize), 0);
 
 	// send file contents
-	while (nsize!=fsize) {
+	while (nsize<fsize) {
 		// read from file to buf
 		// 1byte * 256 count = 256byte => buf[256];
 		int fpsize = fread(buf, 1, 256, file);
