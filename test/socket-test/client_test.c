@@ -27,7 +27,7 @@ int main(int argc, char* argv[]){
 		error_handling("read error");
 	printf("Message from server :%s\n",message);
 
-	char msg[200];
+	char *msg;
 
 	scanf("%s",msg);
 
@@ -41,7 +41,7 @@ int main(int argc, char* argv[]){
     FILE* file = NULL;
     /* 전송할 파일 이름을 작성합니다 */
 	file = fopen(msg, "rb");
-	
+	printf("1\n");
     /* 파일 크기 계산 */
     // move file pointer to end
 	fseek(file, 0, SEEK_END);
@@ -50,6 +50,7 @@ int main(int argc, char* argv[]){
 	// move file pointer to first
 	fseek(file, 0, SEEK_SET);
 	write(clnt_sock, msg, strlen(msg));
+	printf("2\n");
 	// send file size first
 	// fsize2 = htonl(fsize);
 	// send file size
