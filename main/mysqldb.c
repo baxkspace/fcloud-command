@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <mysql.h>
-#include "database.h"
+#include "mysqldb.h"
 
 void finish_error(MYSQL *conn) {
 	fprintf(stderr, "%s\n", mysql_error(conn));
@@ -9,7 +9,7 @@ void finish_error(MYSQL *conn) {
 	exit(1);
 }
 
-void mysqlConenct(char* id, char* pw) {
+void mysqlConnect(char* id, char* pw) {
 	MYSQL *conn = mysql_init(NULL);
 
 	if(conn == NULL) {
@@ -19,9 +19,6 @@ void mysqlConenct(char* id, char* pw) {
 	if (mysql_real_connect(conn, "localhost", "root", "rootroot", NULL, 0, NULL, 0) == NULL) {
 		finish_error(conn);
 	}
-}
-
-void mysqlMake() {
 	if ((mysql_query(conn, "CREATE DATABASE IF NOT EXISTS fcloud"))) {
 		finish_error(conn);
 	}
