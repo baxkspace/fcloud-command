@@ -4,6 +4,7 @@
 #include <curses.h>
 #include <string.h>
 #include <signal.h>
+#include "database.h"
 
 #define SELECTED_MENU 1
 #define UNSELECTED_MENU 2
@@ -12,6 +13,12 @@
 int cur_r, cur_c;
 void print_welcome(char* name);
 void menu_number(struct winsize w);
+char id[30], pw[100];
+
+// color set
+init_pair(SELECTED_MENU, COLOR_WHITE, COLOR_MAGENTA);
+init_pair(UNSELECTED_MENU, COLOR_WHITE, COLOR_CYAN);
+init_pair(MENU, COLOR_BLACK, COLOR_MAGENTA);
 
 int main(int argc, char **argv) {
 	struct winsize w;
@@ -19,15 +26,13 @@ int main(int argc, char **argv) {
 	int row = w.ws_row, col = w.ws_col;
 
 	signal(SIGWINCH, SIG_IGN);
+
+	login();
+
 	initscr();
 	start_color();
 
-	init_pair(SELECTED_MENU, COLOR_WHITE, COLOR_MAGENTA);
-	init_pair(UNSELECTED_MENU, COLOR_WHITE, COLOR_CYAN);
-	init_pair(MENU, COLOR_BLACK, COLOR_MAGENTA);
-
-	char name[100] = "baxkspace";
-	print_welcome(name);
+	print_welcome(id);
 
 	// make menu - selected small
 	move(cur_r + 2, 2);
@@ -84,6 +89,14 @@ void menu_number(struct winsize w) {
 	printw("< list of menu >");
 	attroff(COLOR_PAIR(5));
 	move(w.ws_row - 3, 2);
-	printw("1. show cloud 2. show local 3. download 4. upload");
+	printw("1. show cloud 2. show local 3. download 4. upload 5. delete");
+}
 
+void login() {
+	printf("Enter your mysql ID: ");
+	scanf("%s", id);
+	printf("Enter password: ");
+	scanf("%s", pw);
+	mysqlConnect(id, pw);
+	mysqlMake();
 }
