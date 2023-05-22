@@ -9,6 +9,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <pwd.h>
+#include <time.h>
 #include "mysqldb.h"
 
 #define SELECTED_MENU 1
@@ -24,6 +25,11 @@ void login();
 void show_cloud(struct winsize w);
 void show_local(struct winsize w);
 
+void local_list(char dirname[]);
+void dostat(char* filename);
+void show_file_info(char* filename, struct stat* info_p);
+void mode_to_letters(int mode, char str[]);
+
 int main(int argc, char **argv) {
 	struct winsize w;
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
@@ -34,6 +40,7 @@ int main(int argc, char **argv) {
 	login();
 
 	initscr();
+	crmode();
 	start_color();
 
 	// color set
@@ -45,6 +52,14 @@ int main(int argc, char **argv) {
 
 	show_cloud(w);
 	int num;
+	move(w.ws_row -2, 2);
+	char menu_select_string[100] = "enter menu num >> ";
+	init_pair(123, COLOR_CYAN, COLOR_BLACK);
+	attron(COLOR_PAIR(123));
+	printw(menu_select_string);
+	attroff(COLOR_PAIR(123));
+
+	move(w.ws_row-2, strlen(menu_select_string) + 2);
 	while (!(num == 'q' || num == 'Q')) {
 		num = getch();
 		printw("%d", num);
@@ -85,11 +100,7 @@ void menu_number(struct winsize w) {
 }
 
 void login() {
-	printf("Enter your mysql ID: ");
-	scanf("%s", id);
-	printf("Enter password: ");
-	scanf("%s", pw);
-	mysqlConnect(id, pw);
+	mysqlConnect();
 }
 
 void show_cloud(struct winsize w) {
@@ -112,7 +123,7 @@ void show_cloud(struct winsize w) {
 	attroff(COLOR_PAIR(SELECTED_MENU));
 	move(4, 2);
 	attron(COLOR_PAIR(MENU));
-	printw("%-18s %-17s %-10s %-12s %-17s", "file name", "uploader", "size", "mode", "time");
+	printw("%-18s %-15s %-10s %-10s %-20s", "file name", "uploader", "size", "mode", "time");
 
 	move(w.ws_row - 5, 0);
 	for (int i =0; i < w.ws_col; i++) {
@@ -123,7 +134,6 @@ void show_cloud(struct winsize w) {
 }
 
 void show_local(struct winsize w) {
-	addstr("hi");
 	move(3, 2);
 	attron(COLOR_PAIR(UNSELECTED_MENU));
 	printw(" cloud ");
@@ -143,7 +153,7 @@ void show_local(struct winsize w) {
 	attroff(COLOR_PAIR(SELECTED_MENU));
 	move(4, 2);
 	attron(COLOR_PAIR(MENU));
-	printw("%-18s %-17s %-10s %-12s %-17s", "file name", "uploader", "size", "mode", "time");
+	printw("%-18s %-14s %-10s %-14s %-17s", "file name", "uploader", "size", "mode", "time");
 
 	move(w.ws_row - 5, 0);
 	for (int i =0; i < w.ws_col; i++) {
@@ -152,7 +162,7 @@ void show_local(struct winsize w) {
 	attroff(COLOR_PAIR(MENU));
 
 	move(5, 0);
-	local_list("download", );
+	local_list("download");
 	menu_number(w);
 }
 
@@ -164,6 +174,7 @@ void local_list(char dirname[]) {
 	chdir(dirname);
 
 	getcwd(path, sizeof(path));
+	int cur_line = 5;
 
 	if ((dir_ptr = opendir(path)) == NULL)
 		fprintf(stderr, "ls1: cannot open %s\n", dirname);
@@ -172,6 +183,7 @@ void local_list(char dirname[]) {
 			if(strcmp(direntp->d_name, ".") == 0 ||
 				strcmp(direntp->d_name, "..") == 0)
 					continue;
+			move(cur_line++, 2);
 			dostat(direntp->d_name);
 		} 
 		closedir(dir_ptr);
@@ -180,19 +192,40 @@ void local_list(char dirname[]) {
 
 void dostat(char* filename) {
 	struct stat info;
-	if (stat(dirname, &info) == -1)
+	if (stat(filename, &info) == -1)
 		printw("error");
-	else
+	else {
 		show_file_info(filename, &info);
+	}
 }
 
 void show_file_info(char* filename, struct stat* info_p) {
-	printf("%-18s ", filename);
-	printf("%-17s", "local");
-	printf("%-10ld", (long)info_p->st_size);
-	printf("%-12s", modestr);
-	printf("%-17s", 4+ctime(&info_p->st_mtime));
+	char modestr[] = "----------";
+	void mode_to_letters();
+	mode_to_letters(info_p->st_mode, modestr);
+	printw("%-18s ", filename);
+	printw("%-16s", "local");
+	printw("%-10ld", (long)info_p->st_size);
+	printw("%-14s", modestr);
+	printw("%.17s", 4+ctime(&info_p->st_mtime));
 }
 
+void mode_to_letters(int mode, char str[]) {
+	if (S_ISDIR(mode)) str[0] = 'd';
+	if (S_ISCHR(mode)) str[0] = 'c';
+	if (S_ISBLK(mode)) str[0] = 'b';
+
+	if(mode & S_IRUSR) str[1] = 'r';
+	if(mode & S_IWUSR) str[2] = 'w';
+	if(mode & S_IXUSR) str[3] = 'x';
+
+	if(mode & S_IRGRP) str[4] = 'r';
+	if(mode & S_IWGRP) str[5] = 'w';
+	if(mode & S_IXGRP) str[6] = 'x';
+
+	if(mode & S_IROTH) str[7] = 'r';
+	if(mode & S_IWOTH) str[8] = 'w';
+	if(mode & S_IXOTH) str[9] = 'x';
+}
 
 
