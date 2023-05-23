@@ -11,12 +11,11 @@ void finish_error(MYSQL *conn) {
 
 void mysqlConnect(char* id, char* pw) {
 	MYSQL *conn = mysql_init(NULL);
-
 	if(conn == NULL) {
 		fprintf(stderr, "%s", mysql_error(conn));
 		exit(1);
 	}
-	if (mysql_real_connect(conn, "localhost", "root", "rootroot", NULL, 0, NULL, 0) == NULL) {
+	if (mysql_real_connect(conn, "localhost", id, pw, NULL, 0, NULL, 0) == NULL) {
 		finish_error(conn);
 	}
 	if ((mysql_query(conn, "CREATE DATABASE IF NOT EXISTS fcloud"))) {
