@@ -9,14 +9,8 @@ void finish_error(MYSQL *conn) {
 	exit(1);
 }
 
-void mysqlConnect() {
-	char id[20], pw[30];
+void mysqlConnect(char* id, char* pw) {
 	MYSQL *conn = mysql_init(NULL);
-	printf("Enter your mysql ID: ");
-	scanf("%s", id);
-	printf("Enter password: ");
-	scanf("%s", pw);
-
 	if(conn == NULL) {
 		fprintf(stderr, "%s", mysql_error(conn));
 		exit(1);

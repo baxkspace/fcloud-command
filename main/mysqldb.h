@@ -1,2 +1,2 @@
 //void finish_error(MYSQL *conn);
-void mysqlConnect();
+void mysqlConnect(char*, char*);

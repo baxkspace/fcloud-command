@@ -100,7 +100,11 @@ void menu_number(struct winsize w) {
 }
 
 void login() {
-	mysqlConnect();
+	printf("Enter your mysql ID: ");
+	scanf("%s", id);
+	printf("Enter password: ");
+	scanf("%s", pw);
+	mysqlConnect(id, pw);
 }
 
 void show_cloud(struct winsize w) {
