@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
 	print_welcome(id);
 
 	show_cloud(w);
-	int num;
+	char num;
 	while (!(num == 'q' || num == 'Q')) {
 		num = getch();
 		printw("%d", num);
@@ -152,7 +152,7 @@ void show_local(struct winsize w) {
 	attroff(COLOR_PAIR(MENU));
 
 	move(5, 0);
-	local_list("download", );
+	local_list("download");
 	menu_number(w);
 }
 
@@ -180,13 +180,18 @@ void local_list(char dirname[]) {
 
 void dostat(char* filename) {
 	struct stat info;
-	if (stat(dirname, &info) == -1)
+	if (stat(filename, &info) == -1)
 		printw("error");
 	else
 		show_file_info(filename, &info);
 }
 
 void show_file_info(char* filename, struct stat* info_p) {
+	
+	void mode_to_letters(int mode, char str[]);
+	char modestr[] = "----------";
+
+	mode_to_letters(info_p->st_mode, modestr);
 	printf("%-18s ", filename);
 	printf("%-17s", "local");
 	printf("%-10ld", (long)info_p->st_size);
@@ -194,5 +199,25 @@ void show_file_info(char* filename, struct stat* info_p) {
 	printf("%-17s", 4+ctime(&info_p->st_mtime));
 }
 
+void mode_to_letters(int mode, char str[]){
+	if(S_ISDIR(mode)) str[0] = 'd';
+	if(S_ISCHR(mode)) str[0] = 'c';
+	if(S_ISBLK(mode)) str[0] = 'b';
+
+	if(mode & S_IRUSR) str[1] = 'r';
+	if(mode & S_IWUSR) str[2] = 'w';
+	if(mode & S_IXUSR) str[3] = 'x';
+	if(mode & S_ISUID) str[3] = 's';
+
+	if(mode & S_IRGRP) str[4] = 'r';
+	if(mode & S_IWGRP) str[5] = 'w';
+	if(mode & S_IXGRP) str[6] = 'x';
+	if(mode & S_ISGID) str[6] = 's';
+
+	if(mode & S_IROTH) str[7] = 'r';
+	if(mode & S_IWOTH) str[8] = 'w';
+	if(mode & S_IXOTH) str[9] = 'x';
+	if(mode & S_ISVTX) str[9] = 't';
+}
 
 
