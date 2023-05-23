@@ -19,12 +19,13 @@
 
 int cur_r, cur_c;
 void print_welcome(char* name);
-void menu_number(struct winsize w);
+void menu_number(struct winsize w, int num);
 char id[30], pw[100];
 void login();
 
 void show_cloud(struct winsize w);
 void show_local(struct winsize w);
+void download_file_name(struct winsize w);
 
 void local_list(char dirname[]);
 void dostat(char* filename);
@@ -37,6 +38,8 @@ int main(int argc, char **argv) {
 	int row = w.ws_row, col = w.ws_col;
 
 	signal(SIGWINCH, SIG_IGN);
+	if (access("./download", 0) == -1)
+		mkdir("download", 0755);
 
 	login();
 
@@ -59,16 +62,23 @@ int main(int argc, char **argv) {
 	attron(COLOR_PAIR(123));
 	printw(menu_select_string);
 	attroff(COLOR_PAIR(123));
+	menu_number(w, 0);
+	char filename[100];
 
 	while (!(num == 'q' || num == 'Q')) {
 		move(w.ws_row-2, strlen(menu_select_string) + 2);
-		num = getch();
-		printw("%d", num);
-		if (num == '1') {
+		scanw("%d", &num);
+
+		if (num == 1) {
 			show_cloud(w);
 		}
-		else if (num == '2') {
+		else if (num == 2) {
 			show_local(w);
+		}
+		else if (num == 3) {
+			menu_number(w, 3);
+			download_file_name(w);
+			scanw("%d", filename);
 		}
 	}
 	getch();
@@ -90,14 +100,35 @@ void print_welcome(char* name) {
 	attroff(A_BOLD);
 }
 
-void menu_number(struct winsize w) {
+void menu_number(struct winsize w, int num) {
 	move(w.ws_row - 4, 2);
 	init_pair(5, COLOR_BLACK, COLOR_WHITE);
 	attron(COLOR_PAIR(5));
 	printw("< list of menu >");
 	attroff(COLOR_PAIR(5));
 	move(w.ws_row - 3, 2);
-	printw("1. show cloud 2. show local 3. download 4. upload 5. delete Q: quit");
+	if (num == 0)
+		printw("1. show cloud 2. show local 3. download 4. upload 5. delete Q: quit");
+	else if (num == 1) {
+		attron(COLOR_PAIR(5));
+		printw("1. show cloud");
+		attroff(COLOR_PAIR(5));
+		printw(" 2. show local 3. download 4. upload 5. delete Q: quit");
+	}
+	else if (num == 2) {
+		printw("1. show cloud ");
+		attron(COLOR_PAIR(5));
+		printw("2. show local");
+		attroff(COLOR_PAIR(5));
+		printw(" 3. download 4. upload 5. delete Q: quit");
+	}
+	else if (num == 3) {
+		printw("1. show cloud 2. show local ");
+		attron(COLOR_PAIR(5));
+		printw("3. download");
+		attroff(COLOR_PAIR(5));
+		printw(" 4. upload 5. delete Q: quit");
+	}
 }
 
 void login() {
@@ -138,7 +169,7 @@ void show_cloud(struct winsize w) {
 
 	move(5, 2);
 	cloud_list(id, pw);
-	menu_number(w);
+	menu_number(w, 1);
 
 }
 
@@ -172,7 +203,7 @@ void show_local(struct winsize w) {
 
 	move(5, 0);
 	local_list("download");
-	menu_number(w);
+	menu_number(w, 2);
 }
 
 void local_list(char dirname[]) {
@@ -238,4 +269,15 @@ void mode_to_letters(int mode, char str[]) {
 	if(mode & S_IXOTH) str[9] = 'x';
 }
 
+void download_file_name(struct winsize w) {
+	move(w.ws_row -2, 2);
+	init_pair(123, COLOR_CYAN, COLOR_BLACK);
+	attron(COLOR_PAIR(123));
+	char string[100] = "enter file name to download >> ";
+	printw(string);
+	attroff(COLOR_PAIR(123));	
+
+	char filename[100];
+	move(w.ws_row-2, strlen(string) + 2);
+}
 
