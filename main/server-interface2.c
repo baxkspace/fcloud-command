@@ -128,7 +128,7 @@ void show_cloud(struct winsize w) {
 	attroff(COLOR_PAIR(SELECTED_MENU));
 	move(4, 2);
 	attron(COLOR_PAIR(MENU));
-	printw("%-18s %-15s %-10s %-10s %-20s", "file name", "uploader", "size", "mode", "time");
+	printw("%-18s %-10s     %-10s %-13s %-17s", "file name", "uploader", "size", "mode", "time");
 
 	move(w.ws_row - 5, 0);
 	for (int i =0; i < w.ws_col; i++) {
@@ -162,7 +162,7 @@ void show_local(struct winsize w) {
 	attroff(COLOR_PAIR(SELECTED_MENU));
 	move(4, 2);
 	attron(COLOR_PAIR(MENU));
-	printw("%-18s %-14s %-10s %-14s %-17s", "file name", "uploader", "size", "mode", "time");
+	printw("%-18s %-10s     %-10s %-13s %-17s", "file name", "uploader", "size", "mode", "time");
 
 	move(w.ws_row - 5, 0);
 	for (int i =0; i < w.ws_col; i++) {
@@ -213,6 +213,7 @@ void show_file_info(char* filename, struct stat* info_p) {
 	void mode_to_letters();
 	mode_to_letters(info_p->st_mode, modestr);
 	printw("%-18s ", filename);
+
 	printw("%-16s", "local");
 	printw("%-10ld", (long)info_p->st_size);
 	printw("%-14s", modestr);

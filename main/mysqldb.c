@@ -16,7 +16,7 @@ void mysqlConnect(char* id, char* pw) {
 		fprintf(stderr, "%s", mysql_error(conn));
 		exit(1);
 	}
-	if (mysql_real_connect(conn, "localhost", id, pw, NULL, 0, NULL, 0) == NULL) {
+	if (mysql_real_connect(conn, NULL, id, pw, NULL, 0, NULL, 0) == NULL) {
 		finish_error(conn);
 	}
 	if ((mysql_query(conn, "CREATE DATABASE IF NOT EXISTS fcloud"))) {
@@ -35,6 +35,7 @@ void cloud_list(char* id, char* pw) {
 	MYSQL_RES* res;
 	MYSQL_ROW row;
 	int fields;
+	int row_num = 5;
 
 	mysql_init(&data);
 	mysql_real_connect(&data, "localhost", id, pw, NULL, 0, NULL, 0);
@@ -42,7 +43,7 @@ void cloud_list(char* id, char* pw) {
 	if (mysql_query(&data, "USE fcloud")) {
 		printf("%s\n", mysql_error(&data));
 	}
-	if (mysql_query(&data, "SELECT * FROM filetable")) {
+	if (mysql_query(&data, "SELECT Time,Mode,Size,Uploader,Name FROM filetable")) {
 		printf("%s\n", mysql_error(&data));
 	}
 	printf("2");
@@ -51,9 +52,9 @@ void cloud_list(char* id, char* pw) {
 	fields = mysql_num_fields(res);
 
 	while ((row = mysql_fetch_row(res))) {
-		for (int cnt = 0; cnt < fields; ++cnt) {
-			printw("%s\n", row[cnt]);
-		}
+		move(row_num++, 2);
+		printw("%-18s%-16s%-10s%-14s%.17s", row[4], row[3], row[2], row[1], row[0]);
+		printw("\n");
 	}
 	mysql_free_result(res);
 	mysql_close(&data);
