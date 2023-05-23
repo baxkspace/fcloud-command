@@ -10,6 +10,7 @@
 #include <sys/stat.h>
 #include <pwd.h>
 #include <time.h>
+#include <mysql.h>
 #include "mysqldb.h"
 
 #define SELECTED_MENU 1
@@ -59,8 +60,8 @@ int main(int argc, char **argv) {
 	printw(menu_select_string);
 	attroff(COLOR_PAIR(123));
 
-	move(w.ws_row-2, strlen(menu_select_string) + 2);
 	while (!(num == 'q' || num == 'Q')) {
+		move(w.ws_row-2, strlen(menu_select_string) + 2);
 		num = getch();
 		printw("%d", num);
 		if (num == '1') {
@@ -134,7 +135,11 @@ void show_cloud(struct winsize w) {
 		printw(" ");
 	}
 	attroff(COLOR_PAIR(MENU));
+
+	move(5, 2);
+	cloud_list(id, pw);
 	menu_number(w);
+
 }
 
 void show_local(struct winsize w) {
