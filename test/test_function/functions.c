@@ -21,25 +21,37 @@ void data_upload(char* id, char* pw, char* filename){
 	mysql_close(&data);
 } // done
 
-void data_download(){
+void data_download(char* id, char* pw, char* filename){
 	FILE* f = NULL;	
 	MYSQL data;
-	MYSQL_RES* res;
-	MYSQL_ROW row;
-	char filename[255];
-	res = mysql_store_result(&data);
-	
-	if (mysql_query(&data, "SELECT Time,Mode,Size,Uploader,Name,Contents FROM filetable")) {
+
+	mysql_init(&data);
+	mysql_real_connect(&data, "localhost", id, pw, NULL, 0, NULL, 0);
+
+	if (mysql_query(&data, "USE fcloud")) {
 		printf("%s\n", mysql_error(&data));
 	}
 
+	MYSQL_RES* res;
+	MYSQL_ROW row;
+	char file_location[100];
+	getcwd(file_location, 100);
+	sprintf(file_location, "%s/download/%s",file_location, filename);	
+
+	if (mysql_query(&data, "SELECT Time,Mode,Size,Uploader,Name,Contents FROM filetable")) {
+		printf("%s\n", mysql_error(&data));
+	}
+	f = fopen(file_location, "wb");
+	res = mysql_store_result(&data);
 	while ((row = mysql_fetch_row(res))) {
-		write(clnt_sock, row, sizeof(row));
+		if(strcmp(row[4], filename) == 0){
+			fwrite(row[5], sizeof(row[5]), 1, f);
+			fclose(f);
+			break;
+		}
 	}
 
-	f = fopen(filename, "wb");
-    fwrite(row[5], sizeof(row[5]), 1, file);		
-}
+}//done
 
 void cloud_to_client_list(char* id, char* pw) {
 	MYSQL data;
