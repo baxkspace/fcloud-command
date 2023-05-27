@@ -10,8 +10,10 @@ void data_upload(char* id, char* pw, char* filename){
 	
 	char query[255];
 	char file_location[100];
+	chdir("./download");
 	getcwd(file_location, 100);
-	sprintf(file_location, "%s/download/%s",file_location, filename);
+	sprintf(file_location, "%s/%s",file_location, filename);
+
 
 	sprintf(query, "INSERT INTO filetable VALUES ('%s', NULL, NULL, NULL, NULL, LOAD_FILE('%s'))"
 		,filename,file_location);
