@@ -31,17 +31,18 @@ void data_download(char* id, char* pw, char* filename){
 	if (mysql_query(&data, "USE fcloud")) {
 		printf("%s\n", mysql_error(&data));
 	}
+	chdir("./download");
 
 	MYSQL_RES* res;
 	MYSQL_ROW row;
 	char file_location[100];
 	getcwd(file_location, 100);
-	sprintf(file_location, "%s/download/%s",file_location, filename);	
-
+	sprintf(file_location, "%s/%s",file_location, filename);	
 	if (mysql_query(&data, "SELECT Time,Mode,Size,Uploader,Name,Contents FROM filetable")) {
 		printf("%s\n", mysql_error(&data));
 	}
 	f = fopen(file_location, "wb");
+	
 	res = mysql_store_result(&data);
 	while ((row = mysql_fetch_row(res))) {
 		if(strcmp(row[4], filename) == 0){
