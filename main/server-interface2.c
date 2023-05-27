@@ -11,21 +11,29 @@
 #include <pwd.h>
 #include <time.h>
 #include <mysql.h>
+#include <unistd.h>
 #include "mysqldb.h"
+#include "functions.h"
 
 #define SELECTED_MENU 1
 #define UNSELECTED_MENU 2
 #define MENU 4
 
+int port_num;
 int cur_r, cur_c;
 void print_welcome(char* name);
 void menu_number(struct winsize w, int num);
 char id[30], pw[100];
+char download_string[] = "file name to download(enter 'b' to back) >> ";
+char upload_string[] = "file name to upload(enter 'b' to back) >> ";
+char delete_string[] = "file name to delete(enter 'b' to back) >> ";
 void login();
+void make_blank(struct winsize w);
 
 void show_cloud(struct winsize w);
 void show_local(struct winsize w);
-void download_file_name(struct winsize w);
+void load_file_name(char* input, struct winsize w);
+int enter_menu(struct winsize w);
 
 void local_list(char dirname[]);
 void dostat(char* filename);
@@ -55,30 +63,81 @@ int main(int argc, char **argv) {
 	print_welcome(id);
 
 	show_cloud(w);
-	int num;
-	move(w.ws_row -2, 2);
-	char menu_select_string[100] = "enter menu num >> ";
-	init_pair(123, COLOR_CYAN, COLOR_BLACK);
-	attron(COLOR_PAIR(123));
-	printw(menu_select_string);
-	attroff(COLOR_PAIR(123));
-	menu_number(w, 0);
+	int num = 0;
+	char character;
 	char filename[100];
 
-	while (!(num == 'q' || num == 'Q')) {
-		move(w.ws_row-2, strlen(menu_select_string) + 2);
-		scanw("%d", &num);
+	while (1) {
+		num = enter_menu(w);
+		menu_number(w, num);
 
-		if (num == 1) {
-			show_cloud(w);
-		}
-		else if (num == 2) {
-			show_local(w);
-		}
-		else if (num == 3) {
-			menu_number(w, 3);
-			download_file_name(w);
-			scanw("%d", filename);
+		switch(num) {
+			case 1:
+				show_cloud(w);
+				break;
+			case 2:
+				show_local(w);
+				break;
+			case 3:
+				load_file_name(download_string, w);
+				scanw("%s", filename);
+				if (strcmp(filename, "b") == 0) {
+					move(w.ws_row -2, 2);
+					for(int i = 0; i < w.ws_col; i++)
+						printw(" ");
+					break;
+				}
+				else {
+					data_download(id, pw, filename);
+					move(w.ws_row -2, 2);
+					for(int i = 0; i < w.ws_col; i++)
+						printw(" ");
+					break;
+				}
+			case 4: 
+				load_file_name(upload_string, w);
+				scanw("%s", filename);
+				if (strcmp(filename, "b") == 0) {
+					move(w.ws_row -2, 2);
+					for(int i = 0; i < w.ws_col; i++)
+						printw(" ");
+					break;
+				}
+				else {
+					int op = data_upload(id, pw, filename);
+					move(w.ws_row -2, 2);
+					for(int i = 0; i < w.ws_col; i++)
+						printw(" ");
+					init_pair(223, COLOR_CYAN, COLOR_BLACK);
+					attron(COLOR_PAIR(223));
+					if (op == 0) {
+						move(w.ws_row-2, 2);
+						printw("upload success!");
+					}
+					else if (op == 1) {
+						printw("Fail - There is not %s in local!", filename);
+					}
+					sleep(1);
+					attroff(COLOR_PAIR(223));
+					move(w.ws_row -2, 2);
+					for(int i = 0; i < w.ws_col; i++)
+						printw(" ");
+					break;
+				}
+			case 5:
+				load_file_name(delete_string, w);
+				scanw("%s", filename);
+				if (strcmp(filename, "b") == 0) {
+					move(w.ws_row -2, 2);
+					for(int i = 0; i < w.ws_col; i++)
+						printw(" ");
+					break;
+				}
+				int op = data_delete(id, pw, filename);
+				move(w.ws_row -2, 2);
+					for(int i = 0; i < w.ws_col; i++)
+						printw(" ");
+				break;
 		}
 	}
 	getch();
@@ -97,6 +156,7 @@ void print_welcome(char* name) {
 	attron(COLOR_PAIR(3));
 	printw("%s", name);
 	attroff(COLOR_PAIR(3));
+	printw(" << (port number: %d)", port_num);
 	attroff(A_BOLD);
 }
 
@@ -108,26 +168,11 @@ void menu_number(struct winsize w, int num) {
 	attroff(COLOR_PAIR(5));
 	move(w.ws_row - 3, 2);
 	if (num == 0)
-		printw("1. show cloud 2. show local 3. download 4. upload 5. delete Q: quit");
-	else if (num == 1) {
-		attron(COLOR_PAIR(5));
-		printw("1. show cloud");
-		attroff(COLOR_PAIR(5));
-		printw(" 2. show local 3. download 4. upload 5. delete Q: quit");
-	}
-	else if (num == 2) {
-		printw("1. show cloud ");
-		attron(COLOR_PAIR(5));
-		printw("2. show local");
-		attroff(COLOR_PAIR(5));
-		printw(" 3. download 4. upload 5. delete Q: quit");
-	}
-	else if (num == 3) {
+		printw("1. show cloud 2. show local 3. download 4. upload 5. delete ctrl^C: quit");
+	else {
 		printw("1. show cloud 2. show local ");
-		attron(COLOR_PAIR(5));
 		printw("3. download");
-		attroff(COLOR_PAIR(5));
-		printw(" 4. upload 5. delete Q: quit");
+		printw(" 4. upload 5. delete ctrl^C: quit");
 	}
 }
 
@@ -137,6 +182,8 @@ void login() {
 	printf("Enter password: ");
 	scanf("%s", pw);
 	mysqlConnect(id, pw);
+	printf("Enter port number to open: ");
+	scanf("%d", &port_num);
 }
 
 void show_cloud(struct winsize w) {
@@ -168,8 +215,8 @@ void show_cloud(struct winsize w) {
 	attroff(COLOR_PAIR(MENU));
 
 	move(5, 2);
+	make_blank(w);
 	cloud_list(id, pw);
-	menu_number(w, 1);
 
 }
 
@@ -202,11 +249,12 @@ void show_local(struct winsize w) {
 	attroff(COLOR_PAIR(MENU));
 
 	move(5, 0);
+	make_blank(w);
 	local_list("download");
-	menu_number(w, 2);
 }
 
 void local_list(char dirname[]) {
+
 	DIR *dir_ptr;
 	struct dirent *direntp;
 	char path[256];
@@ -269,15 +317,39 @@ void mode_to_letters(int mode, char str[]) {
 	if(mode & S_IXOTH) str[9] = 'x';
 }
 
-void download_file_name(struct winsize w) {
+void load_file_name(char* input, struct winsize w) {
 	move(w.ws_row -2, 2);
 	init_pair(123, COLOR_CYAN, COLOR_BLACK);
 	attron(COLOR_PAIR(123));
-	char string[100] = "enter file name to download >> ";
-	printw(string);
+	printw(input);
 	attroff(COLOR_PAIR(123));	
 
 	char filename[100];
-	move(w.ws_row-2, strlen(string) + 2);
+	move(w.ws_row-2, strlen(input) + 2);
 }
 
+int enter_menu(struct winsize w) {
+	int num;
+	move(w.ws_row -2, 2);
+	char menu_select_string[100] = "enter menu num >> ";
+	init_pair(123, COLOR_CYAN, COLOR_BLACK);
+	attron(COLOR_PAIR(123));
+	printw(menu_select_string);
+	attroff(COLOR_PAIR(123));
+	menu_number(w, 0);
+	move(w.ws_row-2, strlen(menu_select_string) + 2);
+	printw("            ");
+	move(w.ws_row-2, strlen(menu_select_string) + 2);
+	scanw("%d", &num);
+	return num;
+}
+
+void make_blank(struct winsize w) {
+	for (int i = 5; i < w.ws_row - 6; i++) {
+		for (int j = 0; j < w.ws_col; j++) 
+		{
+			move(i, j);
+			printw(" ");
+		}
+	}
+}
