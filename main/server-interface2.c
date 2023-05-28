@@ -11,7 +11,6 @@
 #include <pwd.h>
 #include <time.h>
 #include <mysql.h>
-#include <unistd.h>
 #include "mysqldb.h"
 #include "functions.h"
 

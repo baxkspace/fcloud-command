@@ -27,8 +27,8 @@ int data_upload(char* id, char* pw, char* filename){
 	sprintf(file_location, "%s/%s",file_location, filename);
 
 	struct stat info;
-	int mode = info.st_mode;
 	stat(filename, &info);
+	int mode = info.st_mode;
 	char str[] = "----------";
 	long size = (long)info.st_size;
 	if (S_ISDIR(mode)) str[0] = 'd';
@@ -119,7 +119,7 @@ int data_delete(char* id, char* pw, char* filename) {
 	if (mysql_query(&data, "USE fcloud")) {
 		printf("%s\n", mysql_error(&data));
 	}
-	if (mysql_query(&data, "SELECT Time,Mode,Size,Uploader,Name FROM filetable")) {
+	if (mysql_query(&data, "SELECT Time,Mode,Size,Uploader,Name,Contents FROM filetable")) {
 		printf("%s\n", mysql_error(&data));
 	}
 
