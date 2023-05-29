@@ -13,6 +13,7 @@
 #include <mysql.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <sys/ioctl>
 #include "mysqldb.h"
 #include "functions.h"
 
@@ -203,7 +204,7 @@ int main(int argc, char **argv) {
 					fclose(file);
 					chdir("..");
 
-					voidBuffer(clnt_sock);
+					flush_socket_buffer(clnt_sock);
 
 					move(w.ws_row -2, 2);
 					/*for(int i = 0; i < w.ws_col; i++)
@@ -587,9 +588,22 @@ void error_handling(char* message){
 	exit(1);
 }
 
-void voidBuffer(int sock){
-	u_long tmpl,i;
-    char tmpc;
-	ioctlsocket(sock,FIONREAD,&tmpl);
-    for(i=0;i<tmpl;i++) recv(sock, &tmpc,sizeof(char),0);
+
+void flush_socket_buffer(int socket_fd) {
+    int bytes_available;
+
+    // 소켓의 읽기 버퍼에 있는 데이터의 바이트 수를 확인합니다.
+    if (ioctl(socket_fd, FIONREAD, &bytes_available) < 0) {
+        perror("ioctl");
+        exit(1);
+    }
+
+    // 읽기 버퍼에 데이터가 있는 경우, 해당 데이터를 읽어서 버립니다.
+    if (bytes_available > 0) {
+        char buffer[bytes_available];
+        if (read(socket_fd, buffer, bytes_available) < 0) {
+            perror("read");
+            exit(1);
+        }
+    }
 }
