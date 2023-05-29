@@ -132,8 +132,10 @@ int main(int argc, char **argv) {
 					file = fopen(filename, "wb");
 					bufsize = 256;
 
-					while(nbyte != 0) {
-				        nbyte = recv(clnt_sock, buf, bufsize, 0);
+					while(1) {
+				        nbyte = read(clnt_sock, buf, sizeof(buf));
+				        if (strcmp(buf, "sendend"))
+				        	break;
 				        printf("nbyte: %d\n",nbyte);
 				        fwrite(buf, sizeof(char), nbyte, file);
 				        printf("buf: %s\n", buf);	
