@@ -139,7 +139,7 @@ int main(int argc, char **argv) {
 				        	break;
 				        }
 				        printf("nbyte: %d\n",nbyte);
-				        fwrite(buf, sizeof(buf), 1, file);
+				        fwrite(buf, sizeof(char), nbyte, file);
 				        printf("buf: %s\n", buf);	
 				        printf("1\n");
 				    }

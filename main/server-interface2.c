@@ -589,14 +589,15 @@ void *recv_msg(void *arg){
 				// read from file to buf
 				// 1byte * 256 count = 256byte => buf[256];
 				int fpsize = fread(buf, 1, 256, file);
+				printf("buf: %s\n",buf);
 				nsize += fpsize;
-				write(clnt_sock, buf, strlen(buf));
+				write(clnt_sock, buf, fpsize);
 				printf("nsize : %d fsize : %d\n",nsize, fsize);
 				usleep(200000);
 			}
 			char msgdone[] = "sendend";
 			buf[0] = '\0';
-			write(clnt_sock, msgdone, strlen(msgdone));
+			write(clnt_sock, msgdone, strlen(msgdone)+1);
 			printf("1123123\n");
 			fclose(file);
 			//unlink(filename);
