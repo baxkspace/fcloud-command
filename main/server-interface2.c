@@ -628,7 +628,7 @@ void *recv_msg(void *arg){
 			//printf("buf: %s\n",buf);
 
 			while(1) {
-				printf("buf: %s\n",buf);
+				//printf("buf: %s\n",buf);
 		        nbyte = read(clnt_sock, buf, sizeof(buf));
 		        printf("buf: %s\n",buf);
 		        usleep(1000000);
