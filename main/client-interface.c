@@ -11,6 +11,8 @@
 #include <pwd.h>
 #include <time.h>
 #include <mysql.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
 #include "mysqldb.h"
 #include "functions.h"
 
@@ -21,6 +23,11 @@
 int port_num;
 char ip_num[20];
 int cur_r, cur_c;
+
+struct winsize w;
+
+int clnt_sock;
+
 void print_welcome(char* name);
 void menu_number(struct winsize w, int num);
 char id[30], pw[100];
@@ -41,15 +48,30 @@ void show_file_info(char* filename, struct stat* info_p);
 void mode_to_letters(int mode, char str[]);
 
 int main(int argc, char **argv) {
-	struct winsize w;
+	
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
 	int row = w.ws_row, col = w.ws_col;
+
+	struct sockaddr_in serv_addr;
+	char message[1024] = {0x00, };
 
 	signal(SIGWINCH, SIG_IGN);
 	if (access("./download", 0) == -1)
 		mkdir("download", 0755);
 
+	clnt_sock = socket(PF_INET, SOCK_STREAM, 0);
+	if(clnt_sock == -1)
+		error_handling("socket error");
+
 	login();
+	memset(&serv_addr, 0, sizeof(serv_addr));
+	serv_addr.sin_family = AF_INET;
+	serv_addr.sin_addr.s_addr = inet_addr(ip_num);
+	serv_addr.sin_port = htons(port_num);
+
+	if(connect(clnt_sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) == -1)
+		error_handling("connect error");
+	
 
 	initscr();
 	crmode();
@@ -63,6 +85,12 @@ int main(int argc, char **argv) {
 	print_welcome(id);
 
 	show_cloud(w);
+
+
+
+
+
+
 	int num = 0;
 	char character;
 	char filename[100];
@@ -88,13 +116,40 @@ int main(int argc, char **argv) {
 					break;
 				}
 				else {
-					data_download(id, pw, filename);
+					char msg[] = "3";
+					//data_download(id, pw, filename);
+					write(clnt_sock, msg, strlen(msg)+1);
+					usleep(200000);
+					write(clnt_sock, filename, strlen(filename)+1);
+
+					chdir("./download");
+					char buf[256];
+
+					int str_len = read(clnt_sock, filename, sizeof(filename));
+					if (str_len != -1) {
+						break;
+					}
+					int nbyte = 256;
+					size_t filesize = 0, bufsize = 0;
+					FILE* file = NULL;
+					file = fopen(filename, "wb");
+					bufsize = 256;
+
+					while(nbyte != 0) {
+				        nbyte = recv(clnt_sock, buf, bufsize, 0);
+				        fwrite(buf, sizeof(char), nbyte, file);		
+				    }
+				    fclose(file);
+				    chdir("..");
+
+
 					move(w.ws_row -2, 2);
 					for(int i = 0; i < w.ws_col; i++)
 						printw(" ");
 					break;
 				}
 			case 4: 
+				chdir("./download");
 				load_file_name(upload_string, w);
 				scanw("%s", filename);
 				if (strcmp(filename, "b") == 0) {
@@ -104,7 +159,50 @@ int main(int argc, char **argv) {
 					break;
 				}
 				else {
-					int op = data_upload(id, pw, filename);
+					//int op = data_upload(id, pw, filename);
+					int op = 1;
+
+
+					char buf[256];
+
+					write(clnt_sock, filename, strlen(filename)+1);
+
+					size_t nsize = 0, fsize;
+					size_t fsize2;
+
+			
+		    		FILE* file = NULL;
+
+		    		/* 전송할 파일 이름을 작성합니다 */
+					if((file = fopen(filename, "rb")) == NULL){
+						op = 1;
+					}
+
+		    		/* 파일 크기 계산 */
+				    // move file pointer to end
+					fseek(file, 0, SEEK_END);
+					// calculate file size
+					fsize=ftell(file);	// move file pointer to first
+					fseek(file, 0, SEEK_SET);
+					
+					// send file size first
+					 //fsize2 = htonl(fsize);
+					// send file size
+					 //send(clnt_sock, &fsize2, sizeof(fsize), 0);
+
+					// send file contents
+					while (nsize != fsize) {
+						// read from file to buf
+						// 1byte * 256 count = 256byte => buf[256];
+						int fpsize = fread(buf, 1, 256, file);
+						nsize += fpsize;
+						send(clnt_sock, buf, fpsize, 0);
+					}
+					fclose(file);
+					chdir("..");
+
+
+
 					move(w.ws_row -2, 2);
 					/*for(int i = 0; i < w.ws_col; i++)
 						printw(" ");*/
@@ -133,7 +231,10 @@ int main(int argc, char **argv) {
 						printw(" ");
 					break;
 				}
-				int op = data_delete(id, pw, filename);
+				else{
+					write(clnt_sock, filename, strlen(filename)+1);
+				}
+				//int op = data_delete(id, pw, filename);
 				move(w.ws_row -2, 2);
 					for(int i = 0; i < w.ws_col; i++)
 						printw(" ");
@@ -142,6 +243,9 @@ int main(int argc, char **argv) {
 	}
 	getch();
 	endwin();
+
+  	close(clnt_sock);
+
 
 	return 0;
 }
@@ -213,8 +317,55 @@ void show_cloud(struct winsize w) {
 
 	move(5, 2);
 	make_blank(w);
-	cloud_list(id, pw);
+	//cloud_list(id, pw);
+	MYSQL data;
+	MYSQL_RES* res;
+	MYSQL_ROW row;
+	int fields;
+	int row_num = 5;
+	int file_num = 0;
 
+  	char msg[] = "1";
+  	char buf[100][255][255];
+  	char messages[255];
+  	int str_len;
+  	int i = 0;
+  	int m = 0;
+  	write(clnt_sock, msg, strlen(msg)+1);
+  	str_len = read(clnt_sock, messages, sizeof(messages));
+    // 서버에서 들어온 메세지 수신
+    // str_len 이 -1 이라는 건, 서버 소켓과 연결이 끊어졌다는 뜻임
+    // 왜 끊어졌는가? send_msg 에서 close(sock) 이 실행되고,
+    // 서버로 EOF 가 갔으면, 서버는 그걸 받아서 "자기가 가진" 클라이언트 소켓을 close 할 것
+    // 그러면 read 했을 때 결과가 -1 일 것.
+    if (str_len == -1)
+      // 종료를 위한 리턴값. thread_return 으로 갈 것
+      return (void *)-1; // pthread_join를 실행시키기 위해
+     
+    if (strcmp(messages, "cloudlist") == 0){
+   		//printf("loading...\n");
+    	while(1){
+    		str_len = read(clnt_sock, messages, sizeof(messages));
+    		if (strcmp(messages, "listdone") == 0){
+    			break;
+    		}
+    		sprintf(buf[i][m], "%s", messages);
+    		m++;
+    		if (m == 5){
+    			m = 0;
+    			i++;
+    		}
+    	}
+
+    	for (int k = 0; k < i; k++){
+    		file_num++;
+    		move(row_num++, 2);
+  			printw("%-18s%-16s%-10s%-14s%.17s", buf[k][4], buf[k][3], buf[k][2], buf[k][1], buf[k][0]);
+			printw("\n");	
+  		}
+    }
+    // 버퍼 맨 마지막 값 NULL
+    // 받은 메세지 출력
 }
 
 void show_local(struct winsize w) {
@@ -349,4 +500,87 @@ void make_blank(struct winsize w) {
 			printw(" ");
 		}
 	}
+}
+
+void *recv_msg(void *arg){
+	MYSQL data;
+	MYSQL_RES* res;
+	MYSQL_ROW row;
+	int fields;
+	int row_num = 5;
+	int file_num = 0;
+
+	int sock = *((int *)arg);
+  	char msg[100];
+  	char buf[100][255][255];
+  	char messages[255];
+  	int str_len;
+  	int i = 0;
+  	int m = 0;
+  	while (str_len = read(sock, messages, sizeof(messages)))
+  	{
+    // 서버에서 들어온 메세지 수신
+    // str_len 이 -1 이라는 건, 서버 소켓과 연결이 끊어졌다는 뜻임
+    // 왜 끊어졌는가? send_msg 에서 close(sock) 이 실행되고,
+    // 서버로 EOF 가 갔으면, 서버는 그걸 받아서 "자기가 가진" 클라이언트 소켓을 close 할 것
+    // 그러면 read 했을 때 결과가 -1 일 것.
+    if (str_len == -1)
+      // 종료를 위한 리턴값. thread_return 으로 갈 것
+      return (void *)-1; // pthread_join를 실행시키기 위해
+     
+    if (strcmp(messages, "cloudlist") == 0){
+   		//printf("loading...\n");
+    	while(1){
+    		str_len = read(sock, messages, sizeof(messages));
+    		if (strcmp(messages, "listdone") == 0){
+    			break;
+    		}
+    		sprintf(buf[i][m], "%s", messages);
+    		m++;
+    		if (m == 5){
+    			m = 0;
+    			i++;
+    		}
+    	}
+
+    	for (int k = 0; k < i; k++){
+    		file_num++;
+    		move(row_num++, 2);
+  			printw("%-18s%-16s%-10s%-14s%.17s", buf[k][4], buf[k][3], buf[k][2], buf[k][1], buf[k][0]);
+			printw("\n");	
+  		}
+    }
+    // 버퍼 맨 마지막 값 NULL
+    // 받은 메세지 출력
+	}
+	return NULL;
+}
+
+void *send_msg(void *arg){
+	// void형 int형으로 전환
+  int sock = *((int *)arg);
+  // 사용자 아이디와 메세지를 "붙여서" 한 번에 보낼 것이다
+  char message[100];
+ 
+
+	while (1)
+  	{
+    // 입력받음
+    	scanf("%s",message);
+    // Q 입력 시 종료
+    	if (!strcmp(message, "q\n") || !strcmp(message, "Q\n"))
+    	{
+      // 서버에 EOF 를 보냄
+      	close(sock);
+      	exit(0);
+    	}
+    // 서버로 메세지 보냄
+    	write(sock, message, strlen(message)+1);
+  	}
+}
+
+void error_handling(char* message){
+	fputs(message, stderr);
+	fputc('\n', stderr);
+	exit(1);
 }

@@ -660,6 +660,11 @@ void *recv_msg(void *arg){
 			unlink(filename);
 			chdir("..");
     	}
+    	else if (strcmp(msg, "5") == 0){
+    		char filename[100];
+    		read(clnt_sock, filename, sizeof(filename));
+    		data_delete(id, pw, filename);
+    	}
   	}
 
   	// while 문 탈출했다는 건, 현재 담당하는 소켓의 연결이 끊어졌다는 뜻임.
