@@ -64,6 +64,7 @@ int main(int argc, char **argv) {
 		error_handling("socket error");
 
 	login();
+
 	memset(&serv_addr, 0, sizeof(serv_addr));
 	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_addr.s_addr = inet_addr(ip_num);
@@ -284,7 +285,7 @@ void login() {
 	printf("Enter port number to open: ");
 	scanf("%d", &port_num);
 	printf("Enter ip number of server: ");
-	scanf("%c", ip_num);
+	scanf("%s", ip_num);
 }
 
 void show_cloud(struct winsize w) {
