@@ -9,3 +9,7 @@
   grant all privileges on *.* to 'id'@'localhost/@' identified by 'password';
   ```
   * client가 서버 접속 위해서 server는 port와 ip 주소 제공
+  * server에서 mysql 권한 부여 위해 추가적으로 실행해야 하는 것
+  
+    * /etc/apparmor.d/local/usr.sbin.mysqld 파일 내로 들어가 */home/개인 우분투 아이디/*** r, 입력
+    * /etc/mysql/mysql.conf.d/mysqld.cnf 파일 내로 들어가 [mysql] * Basic Settings 윗줄에 *secure_file_priv="/home/우분투 아이디"* 입력
