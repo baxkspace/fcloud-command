@@ -135,8 +135,10 @@ int main(int argc, char **argv) {
 					while(1) {
 				        nbyte = read(clnt_sock, buf, sizeof(buf));
 				        printf("buf: %s\n",buf);
-				        if (strcmp(buf, "sendend"))
+				        if (strcmp(buf, "sendend")){
+				        	printf("ssss: %s\n",buf);
 				        	break;
+				        }
 				        printf("nbyte: %d\n",nbyte);
 				        fwrite(buf, sizeof(buf), 1, file);
 				        printf("buf: %s\n", buf);	
