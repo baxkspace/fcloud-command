@@ -579,50 +579,54 @@ void *recv_msg(void *arg){
 			fsize=ftell(file);	// move file pointer to first
 			fseek(file, 0, SEEK_SET);
 			
-			// send file size first
-			 //fsize2 = htonl(fsize);
-			// send file size
-			 //send(clnt_sock, &fsize2, sizeof(fsize), 0);
 
 			// send file contents
 			while (nsize != fsize) {
 				// read from file to buf
 				// 1byte * 256 count = 256byte => buf[256];
 				int fpsize = fread(buf, 1, 256, file);
-				printf("buf: %s\n",buf);
 				nsize += fpsize;
 				write(clnt_sock, buf, fpsize);
-				printf("nsize : %d fsize : %d\n",nsize, fsize);
 				usleep(200000);
 			}
 			char msgdone[] = "sendend";
 			buf[0] = '\0';
 			write(clnt_sock, msgdone, strlen(msgdone)+1);
-			printf("1123123\n");
 			fclose(file);
-			//unlink(filename);
+			unlink(filename);
 			chdir("..");
     	}
     	else if (strcmp(msg, "4") == 0){
+
+
+
+
+
     		chdir("./client_download");
-    		char filename[256];
+			char filename[256];
 			char buf[256];
 
 			int str_len = read(clnt_sock, filename, sizeof(filename));
 			if (str_len != -1) {
 				break;
 			}
+
 			int nbyte = 256;
 			size_t filesize = 0, bufsize = 0;
 			FILE* file = NULL;
 			file = fopen(filename, "wb");
 			bufsize = 256;
 
-			while(nbyte != 0) {
-		        nbyte = recv(clnt_sock, buf, bufsize, 0);
-		        fwrite(buf, sizeof(char), nbyte, file);		
+			while(1) {
+		        nbyte = read(clnt_sock, buf, sizeof(buf));
+		        if (strcmp(buf, "sendend")==0){
+		        	break;
+		        }
+		        fwrite(buf, sizeof(char), nbyte, file);
 		    }
 		    fclose(file);
+
+
 
 		    MYSQL data;
 

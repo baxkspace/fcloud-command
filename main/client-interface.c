@@ -134,14 +134,10 @@ int main(int argc, char **argv) {
 
 					while(1) {
 				        nbyte = read(clnt_sock, buf, sizeof(buf));
-				        printf("buf: %s\n",buf);
 				        if (strcmp(buf, "sendend")==0){
 				        	break;
 				        }
-				        printf("nbyte: %d\n",nbyte);
 				        fwrite(buf, sizeof(char), nbyte, file);
-				        printf("buf: %s\n", buf);	
-				        printf("1\n");
 				    }
 				    fclose(file);
 				    chdir("..");
@@ -166,7 +162,6 @@ int main(int argc, char **argv) {
 					//int op = data_upload(id, pw, filename);
 					int op = 1;
 
-
 					char buf[256];
 
 					write(clnt_sock, filename, strlen(filename)+1);
@@ -179,7 +174,7 @@ int main(int argc, char **argv) {
 
 		    		/* 전송할 파일 이름을 작성합니다 */
 					if((file = fopen(filename, "rb")) == NULL){
-						op = 1;
+						printf("file not exists\n");
 					}
 
 		    		/* 파일 크기 계산 */
@@ -188,11 +183,6 @@ int main(int argc, char **argv) {
 					// calculate file size
 					fsize=ftell(file);	// move file pointer to first
 					fseek(file, 0, SEEK_SET);
-					
-					// send file size first
-					 //fsize2 = htonl(fsize);
-					// send file size
-					 //send(clnt_sock, &fsize2, sizeof(fsize), 0);
 
 					// send file contents
 					while (nsize != fsize) {
@@ -200,9 +190,12 @@ int main(int argc, char **argv) {
 						// 1byte * 256 count = 256byte => buf[256];
 						int fpsize = fread(buf, 1, 256, file);
 						nsize += fpsize;
-						send(clnt_sock, buf, fpsize, 0);
-						usleep(100000);
+						write(clnt_sock, buf, fpsize);
+						usleep(200000);
 					}
+					char msgdone[] = "sendend";
+					buf[0] = '\0';
+					write(clnt_sock, msgdone, strlen(msgdone)+1);
 					fclose(file);
 					chdir("..");
 
