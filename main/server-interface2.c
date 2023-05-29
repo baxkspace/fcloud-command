@@ -624,6 +624,7 @@ void *recv_msg(void *arg){
 				//printf("buf: %s\n",buf);
 		        nbyte = read(clnt_sock, buf, sizeof(buf));
 		        //printf("buf: %s\n",buf);
+		        usleep(1000000);
 		        //printf("nbyte:::::: %d\n",nbyte);
 		        if (strcmp(buf, "sendend")==0){
 		        	break;
