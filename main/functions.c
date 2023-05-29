@@ -8,6 +8,7 @@
 #include <dirent.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <curses.h>
 #include "functions.h"
 
 int data_upload(char* id, char* pw, char* filename){
@@ -57,9 +58,30 @@ int data_upload(char* id, char* pw, char* filename){
 	return 0;
 } 
 
-void data_download(char* id, char* pw, char* filename){
+int data_download(char* id, char* pw, char* filename){
 	FILE* f = NULL;	
 	MYSQL data;
+
+	DIR *dir_ptr;
+	struct dirent *direntp;
+	char path[256];
+
+	if (chdir("./download") != 0) {
+		printf("error: open download");
+	}
+	getcwd(path, sizeof(path));
+	if ((dir_ptr = opendir(path)) == NULL)
+		fprintf(stderr, "cannot open %s\n", path);
+	else {
+		while ((direntp = readdir(dir_ptr)) != NULL) {
+			if (strcmp(direntp->d_name, ".") == 0 ||
+				strcmp(direntp->d_name, "..") == 0)
+				continue;
+			if (strcmp(filename, direntp->d_name) == 0) {
+				return -1;
+			}
+		}
+	}
 
 	mysql_init(&data);
 	mysql_real_connect(&data, "localhost", id, pw, NULL, 0, NULL, 0);
@@ -88,6 +110,7 @@ void data_download(char* id, char* pw, char* filename){
 		}
 	}
 	chdir("..");
+	return 0;
 
 }//done
 

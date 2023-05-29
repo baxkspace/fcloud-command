@@ -158,15 +158,16 @@ int main(int argc, char **argv) {
 						printw(" ");
 					break;
 				}
-				else if (cloud_file_num >= 14) {
-					move(w.ws_row - 1, 2);
-					printw("cloud is full!");
-				}
 				else {
-					data_download(id, pw, filename);
+					int op = data_download(id, pw, filename);
 					move(w.ws_row -2, 2);
 					for(int i = 0; i < w.ws_col; i++)
 						printw(" ");
+					if (op == -1) {
+						move(w.ws_row-1, 2);
+						printw("Fail: same name exists!");
+						usleep(200000);
+					}
 					break;
 				}
 			case 4: 

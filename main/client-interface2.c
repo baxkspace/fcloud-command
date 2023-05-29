@@ -13,7 +13,6 @@
 #include <mysql.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
-#include <sys/ioctl.h>
 #include "mysqldb.h"
 #include "functions.h"
 
@@ -47,7 +46,6 @@ void local_list(char dirname[]);
 void dostat(char* filename);
 void show_file_info(char* filename, struct stat* info_p);
 void mode_to_letters(int mode, char str[]);
-void flush_socket_buffer(int sock);
 
 int main(int argc, char **argv) {
 	
@@ -92,6 +90,8 @@ int main(int argc, char **argv) {
 
 
 
+
+
 	int num = 0;
 	char character;
 	char filename[100];
@@ -118,54 +118,27 @@ int main(int argc, char **argv) {
 				}
 				else {
 					char msg[] = "3";
-					int op = 0;
 					//data_download(id, pw, filename);
 					write(clnt_sock, msg, strlen(msg)+1);
-					usleep(100000);
+					usleep(200000);
 					write(clnt_sock, filename, strlen(filename)+1);
-
-					DIR *dir_ptr;
-					struct dirent *direntp;
-					char path[256];
-
-					if (chdir("./download") != 0) {
-						printf("error: open download");
-					}
-					getcwd(path, sizeof(path));
-					if ((dir_ptr = opendir(path)) == NULL)
-						fprintf(stderr, "cannot open %s\n", path);
-					else {
-						while ((direntp = readdir(dir_ptr)) != NULL) {
-							if (strcmp(direntp->d_name, ".") == 0 ||
-								strcmp(direntp->d_name, "..") == 0)
-								continue;
-							if (strcmp(filename, direntp->d_name) == 0) {
-								move(w.ws_row-1, 2);
-								printw("Fail: same name exists!");
-								op = -1;
-								break;
-							}
-						}
-					}
-					if (op == -1) {
-						break;
-					}
 
 					chdir("./download");
 					char buf[256];
 
+					int str_len = read(clnt_sock, filename, sizeof(filename));
+					if (str_len != -1) {
+						break;
+					}
 					int nbyte = 256;
 					size_t filesize = 0, bufsize = 0;
 					FILE* file = NULL;
 					file = fopen(filename, "wb");
 					bufsize = 256;
 
-					while(1) {
-				        nbyte = read(clnt_sock, buf, sizeof(buf));
-				        if (strcmp(buf, "sendend")==0){
-				        	break;
-				        }
-				        fwrite(buf, sizeof(char), nbyte, file);
+					while(nbyte != 0) {
+				        nbyte = recv(clnt_sock, buf, bufsize, 0);
+				        fwrite(buf, sizeof(char), nbyte, file);		
 				    }
 				    fclose(file);
 				    chdir("..");
@@ -190,10 +163,8 @@ int main(int argc, char **argv) {
 					//int op = data_upload(id, pw, filename);
 					int op = 1;
 
+
 					char buf[256];
-					char msg[] = "4";
-					write(clnt_sock, msg, strlen(msg)+1);
-					usleep(100000);
 
 					write(clnt_sock, filename, strlen(filename)+1);
 
@@ -205,7 +176,7 @@ int main(int argc, char **argv) {
 
 		    		/* 전송할 파일 이름을 작성합니다 */
 					if((file = fopen(filename, "rb")) == NULL){
-						printf("file not exists\n");
+						op = 1;
 					}
 
 		    		/* 파일 크기 계산 */
@@ -214,24 +185,24 @@ int main(int argc, char **argv) {
 					// calculate file size
 					fsize=ftell(file);	// move file pointer to first
 					fseek(file, 0, SEEK_SET);
+					
+					// send file size first
+					 //fsize2 = htonl(fsize);
+					// send file size
+					 //send(clnt_sock, &fsize2, sizeof(fsize), 0);
 
 					// send file contents
 					while (nsize != fsize) {
-						//sleep(1);
 						// read from file to buf
 						// 1byte * 256 count = 256byte => buf[256];
-						flush_socket_buffer(clnt_sock);
 						int fpsize = fread(buf, 1, 256, file);
 						nsize += fpsize;
-						//printf("nsize: %d, fpsize: %d\n",nsize, fpsize);
-						write(clnt_sock, buf, fpsize);
-						//printf("buf: %s\n",buf);
+						send(clnt_sock, buf, fpsize, 0);
 					}
-					char msgdone[] = "sendend";
-					buf[0] = '\0';
-					write(clnt_sock, msgdone, strlen(msgdone)+1);
 					fclose(file);
 					chdir("..");
+
+
 
 					move(w.ws_row -2, 2);
 					/*for(int i = 0; i < w.ws_col; i++)
@@ -270,7 +241,6 @@ int main(int argc, char **argv) {
 						printw(" ");
 				break;
 		}
-		//flush_socket_buffer(clnt_sock);
 	}
 	getch();
 	endwin();
@@ -303,11 +273,11 @@ void menu_number(struct winsize w, int num) {
 	attroff(COLOR_PAIR(5));
 	move(w.ws_row - 3, 2);
 	if (num == 0)
-		printw("1. show cloud 2. show local 3. download 4. upload ctrl^C: quit");
+		printw("1. show cloud 2. show local 3. download 4. upload 5. delete ctrl^C: quit");
 	else {
 		printw("1. show cloud 2. show local ");
 		printw("3. download");
-		printw(" 4. upload ctrl^C: quit");
+		printw(" 4. upload 5. delete ctrl^C: quit");
 	}
 }
 
@@ -319,45 +289,6 @@ void login() {
 }
 
 void show_cloud(struct winsize w) {
-	MYSQL data;
-	MYSQL_RES* res;
-	MYSQL_ROW row;
-	int fields;
-	int row_num = 5;
-	int file_num = 0;
-
-  	char msg[] = "1";
-  	char buf[100][255][255];
-  	char messages[255];
-  	int str_len;
-  	int i = 0;
-  	int m = 0;
-  	write(clnt_sock, msg, strlen(msg)+1);
-  	str_len = read(clnt_sock, messages, sizeof(messages));
-    // 서버에서 들어온 메세지 수신
-    // str_len 이 -1 이라는 건, 서버 소켓과 연결이 끊어졌다는 뜻임
-    // 왜 끊어졌는가? send_msg 에서 close(sock) 이 실행되고,
-    // 서버로 EOF 가 갔으면, 서버는 그걸 받아서 "자기가 가진" 클라이언트 소켓을 close 할 것
-    // 그러면 read 했을 때 결과가 -1 일 것.
-    if (str_len == -1)
-      // 종료를 위한 리턴값. thread_return 으로 갈 것
-      return (void *)-1; // pthread_join를 실행시키기 위해
-     
-    if (strcmp(messages, "cloudlist") == 0){
-   		//printf("loading...\n");
-    	while(1){
-    		str_len = read(clnt_sock, messages, sizeof(messages));
-    		if (strcmp(messages, "listdone") == 0){
-    			break;
-    		}
-    		sprintf(buf[i][m], "%s", messages);
-    		m++;
-    		if (m == 5){
-    			m = 0;
-    			i++;
-    		}
-    	}
-    }
 	move(3, 2);
 	attron(COLOR_PAIR(SELECTED_MENU));
 	printw(" cloud ");
@@ -388,15 +319,57 @@ void show_cloud(struct winsize w) {
 	move(5, 2);
 	make_blank(w);
 	//cloud_list(id, pw);
+	MYSQL data;
+	MYSQL_RES* res;
+	MYSQL_ROW row;
+	int fields;
+	int row_num = 5;
+	int file_num = 0;
 
-    // 버퍼 맨 마지막 값 NULL
-    // 받은 메세지 출력
-    for (int k = 0; k < i; k++){
+  	char msg[] = "1";
+  	char buf[100][255][255];
+  	char messages[255];
+  	int str_len;
+  	int i = 0;
+  	int m = 0;
+  	write(clnt_sock, msg, strlen(msg)+1);
+  	str_len = read(clnt_sock, messages, sizeof(messages));
+    // 서버에서 들어온 메세지 수신
+    // str_len 이 -1 이라는 건, 서버 소켓과 연결이 끊어졌다는 뜻임
+    // 왜 끊어졌는가? send_msg 에서 close(sock) 이 실행되고,
+    // 서버로 EOF 가 갔으면, 서버는 그걸 받아서 "자기가 가진" 클라이언트 소켓을 close 할 것
+    // 그러면 read 했을 때 결과가 -1 일 것.
+    if (str_len == -1)
+      // 종료를 위한 리턴값. thread_return 으로 갈 것
+      return (void *)-1; // pthread_join를 실행시키기 위해
+     
+    if (strcmp(messages, "cloudlist") == 0){
+    	move(w.ws_row-1, 2);
+   		printw("loading...\n");
+    	while(1){
+    		str_len = read(clnt_sock, messages, sizeof(messages));
+    		if (strcmp(messages, "listdone") == 0){
+    			break;
+    		}
+    		sprintf(buf[i][m], "%s", messages);
+    		m++;
+    		if (m == 5){
+    			m = 0;
+    			i++;
+    		}
+    	}
+
+    	for (int k = 0; k < i; k++){
     		file_num++;
     		move(row_num++, 2);
   			printw("%-18s%-16s%-10s%-14s%.17s", buf[k][4], buf[k][3], buf[k][2], buf[k][1], buf[k][0]);
 			printw("\n");	
-  	}
+  		}
+  		move(w.ws_row-1,2);
+  		printw("               ");
+    }
+    // 버퍼 맨 마지막 값 NULL
+    // 받은 메세지 출력
 }
 
 void show_local(struct winsize w) {
@@ -517,7 +490,9 @@ int enter_menu(struct winsize w) {
 	attroff(COLOR_PAIR(123));
 	menu_number(w, 0);
 	move(w.ws_row-2, strlen(menu_select_string) + 2);
-	printw("            ");
+	for (int i = 0; i < w.ws_col; i++) {
+		printw(" ");
+	}
 	move(w.ws_row-2, strlen(menu_select_string) + 2);
 	scanw("%d", &num);
 	return num;
@@ -614,24 +589,4 @@ void error_handling(char* message){
 	fputs(message, stderr);
 	fputc('\n', stderr);
 	exit(1);
-}
-
-
-void flush_socket_buffer(int socket_fd) {
-    int bytes_available;
-
-    // 소켓의 읽기 버퍼에 있는 데이터의 바이트 수를 확인합니다.
-    if (ioctl(socket_fd, FIONREAD, &bytes_available) < 0) {
-        perror("ioctl");
-        exit(1);
-    }
-
-    // 읽기 버퍼에 데이터가 있는 경우, 해당 데이터를 읽어서 버립니다.
-    if (bytes_available > 0) {
-        char buffer[bytes_available];
-        if (read(socket_fd, buffer, bytes_available) < 0) {
-            perror("read");
-            exit(1);
-        }
-    }
 }
