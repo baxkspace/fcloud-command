@@ -624,6 +624,7 @@ void *recv_msg(void *arg){
 			size_t filesize = 0, bufsize = 0;
 			FILE* file = NULL;
 			file = fopen(filename, "wb");
+			char done[255] = "done";
 			bufsize = 256;
 			//printf("buf: %s\n",buf);
 			//printf("filename: %s\n",filename);
@@ -639,6 +640,7 @@ void *recv_msg(void *arg){
 		        }
 		        //printf("11111\n");
 		        fwrite(buf, strlen(buf), 1, file);
+		        write(clnt_sock, done, strlen(done));
 		    }
 		    fclose(file);
 
