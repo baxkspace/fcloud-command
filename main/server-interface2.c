@@ -597,7 +597,7 @@ void *recv_msg(void *arg){
 			chdir("..");
     	}
     	else if (strcmp(msg, "4") == 0){
-
+    		printf("1\n");
 
 
 
@@ -610,6 +610,7 @@ void *recv_msg(void *arg){
 			if (str_len != -1) {
 				break;
 			}
+			printf("2\n");
 
 			int nbyte = 256;
 			size_t filesize = 0, bufsize = 0;
@@ -627,7 +628,7 @@ void *recv_msg(void *arg){
 		    fclose(file);
 
 
-
+		    printf("hi\n");
 		    MYSQL data;
 
 			mysql_init(&data);

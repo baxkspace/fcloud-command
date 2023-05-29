@@ -163,6 +163,9 @@ int main(int argc, char **argv) {
 					int op = 1;
 
 					char buf[256];
+					char msg[] = "4";
+					write(clnt_sock, msg, strlen(msg)+1);
+					usleep(100000);
 
 					write(clnt_sock, filename, strlen(filename)+1);
 
