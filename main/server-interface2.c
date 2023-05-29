@@ -607,8 +607,9 @@ void *recv_msg(void *arg){
 			char buf[256];
 
 			int str_len = read(clnt_sock, filename, sizeof(filename));
-			if (str_len != -1) {
-				break;
+
+			if (str_len == 0) {
+				continue;
 			}
 			printf("2\n");
 
@@ -620,9 +621,12 @@ void *recv_msg(void *arg){
 
 			while(1) {
 		        nbyte = read(clnt_sock, buf, sizeof(buf));
+		        printf("buf: %s\n",buf);
+		        printf("nbyte:::::: %d\n",nbyte);
 		        if (strcmp(buf, "sendend")==0){
 		        	break;
 		        }
+		        printf("11111\n");
 		        fwrite(buf, sizeof(char), nbyte, file);
 		    }
 		    fclose(file);

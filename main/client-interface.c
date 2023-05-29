@@ -194,6 +194,7 @@ int main(int argc, char **argv) {
 						int fpsize = fread(buf, 1, 256, file);
 						nsize += fpsize;
 						write(clnt_sock, buf, fpsize);
+						printf("buf: %s\n",buf);
 						usleep(200000);
 					}
 					char msgdone[] = "sendend";
