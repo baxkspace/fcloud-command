@@ -190,6 +190,10 @@ int main(int argc, char **argv) {
 					if (op == 0) {
 						move(w.ws_row-1, 2);
 						addstr("upload success!");
+						sleep(1);
+						move(w.ws_row-1, 2);
+						for(int i = 0; i < w.ws_col; i++)
+							printw(" ");
 					}
 					else if (op == 1) {
 						sleep(1);
@@ -624,9 +628,9 @@ void *recv_msg(void *arg){
 			//printf("buf: %s\n",buf);
 
 			while(1) {
-				//printf("buf: %s\n",buf);
+				printf("buf: %s\n",buf);
 		        nbyte = read(clnt_sock, buf, sizeof(buf));
-		        //printf("buf: %s\n",buf);
+		        printf("buf: %s\n",buf);
 		        usleep(1000000);
 		        //printf("nbyte:::::: %d\n",nbyte);
 		        if (strcmp(buf, "sendend")==0){
@@ -677,7 +681,7 @@ void *recv_msg(void *arg){
 
 
 			sprintf(query, "INSERT INTO filetable(Name, Uploader, Size, Mode, Contents) VALUES ('%s', '%s', '%ld','%s', LOAD_FILE('%s'))"
-				,filename,username,size,str,file_location);
+				,filename,"client",size,str,file_location);
 			if (mysql_query(&data, query) != 0) {
 				printf("uploadError\n");
 			}

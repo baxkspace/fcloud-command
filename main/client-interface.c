@@ -227,7 +227,7 @@ int main(int argc, char **argv) {
 						//sleep(1);
 						// read from file to buf
 						// 1byte * 256 count = 256byte => buf[256];
-						flush_socket_buffer(clnt_sock);
+						//flush_socket_buffer(clnt_sock);
 						int fpsize = fread(buf, 1, 256, file);
 						nsize += fpsize;
 						//printf("nsize: %d, fpsize: %d\n",nsize, fpsize);
