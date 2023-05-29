@@ -14,6 +14,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <pthread.h>
+#include <sys/ioctl.h>
 #include "mysqldb.h"
 #include "functions.h"
 
@@ -61,6 +62,7 @@ void local_list(char dirname[]);
 void dostat(char* filename);
 void show_file_info(char* filename, struct stat* info_p);
 void mode_to_letters(int mode, char str[]);
+void flush_socket_buffer(int socket_fd);
 
 int main(int argc, char **argv) {
 	struct winsize w;
@@ -112,6 +114,8 @@ int main(int argc, char **argv) {
   	// 웹서버같이 수천명의 클라이언트로 바쁠 경우, 15로 잡는 경우가 보통임
   	if (listen(serv_sock, 5) == -1)
     	error_handling("listen() error");
+
+
   	// recv_thread
  	pthread_create(&rcv_thread, NULL, handle_clnt, (void *)&serv_sock);
 
@@ -134,6 +138,7 @@ int main(int argc, char **argv) {
 	char filename[100];
 
 	while (1) {
+		flush_socket_buffer(serv_sock);
 		num = enter_menu(w);
 		menu_number(w, num);
 
@@ -600,8 +605,6 @@ void *recv_msg(void *arg){
     		printf("1\n");
 
 
-
-
     		chdir("./client_download");
 			char filename[256];
 			char buf[256];
@@ -683,6 +686,7 @@ void *recv_msg(void *arg){
     		read(clnt_sock, filename, sizeof(filename));
     		data_delete(id, pw, filename);
     	}
+    	flush_socket_buffer(serv_sock);
   	}
 
   	// while 문 탈출했다는 건, 현재 담당하는 소켓의 연결이 끊어졌다는 뜻임.
@@ -721,3 +725,22 @@ void error_handling(char *msg)
 }
 
 // socket add
+
+void flush_socket_buffer(int socket_fd) {
+    int bytes_available;
+
+    // 소켓의 읽기 버퍼에 있는 데이터의 바이트 수를 확인합니다.
+    if (ioctl(socket_fd, FIONREAD, &bytes_available) < 0) {
+        perror("ioctl");
+        exit(1);
+    }
+
+    // 읽기 버퍼에 데이터가 있는 경우, 해당 데이터를 읽어서 버립니다.
+    if (bytes_available > 0) {
+        char buffer[bytes_available];
+        if (read(socket_fd, buffer, bytes_available) < 0) {
+            perror("read");
+            exit(1);
+        }
+    }
+}

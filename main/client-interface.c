@@ -47,7 +47,7 @@ void local_list(char dirname[]);
 void dostat(char* filename);
 void show_file_info(char* filename, struct stat* info_p);
 void mode_to_letters(int mode, char str[]);
-void voidBuffer(int sock);
+void flush_socket_buffer(int sock);
 
 int main(int argc, char **argv) {
 	
@@ -192,6 +192,7 @@ int main(int argc, char **argv) {
 						//sleep(1);
 						// read from file to buf
 						// 1byte * 256 count = 256byte => buf[256];
+						flush_socket_buffer(clnt_sock);
 						int fpsize = fread(buf, 1, 256, file);
 						nsize += fpsize;
 						printf("nsize: %d, fpsize: %d\n",nsize, fpsize);
@@ -203,8 +204,6 @@ int main(int argc, char **argv) {
 					write(clnt_sock, msgdone, strlen(msgdone)+1);
 					fclose(file);
 					chdir("..");
-
-					flush_socket_buffer(clnt_sock);
 
 					move(w.ws_row -2, 2);
 					/*for(int i = 0; i < w.ws_col; i++)
@@ -243,6 +242,7 @@ int main(int argc, char **argv) {
 						printw(" ");
 				break;
 		}
+		//flush_socket_buffer(clnt_sock);
 	}
 	getch();
 	endwin();
