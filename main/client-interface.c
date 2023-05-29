@@ -23,6 +23,7 @@
 
 int port_num;
 char ip_num[20];
+char username[100];
 int cur_r, cur_c;
 
 struct winsize w;
@@ -76,6 +77,7 @@ int main(int argc, char **argv) {
 		error_handling("connect error");
 	
 	read(clnt_sock, id, sizeof(id));
+
 	initscr();
 	crmode();
 	start_color();
@@ -236,6 +238,7 @@ int main(int argc, char **argv) {
 					fclose(file);
 					chdir("..");
 
+					write(clnt_sock, username, strlen(username)+1);
 					move(w.ws_row -2, 2);
 					/*for(int i = 0; i < w.ws_col; i++)
 						printw(" ");*/
@@ -319,6 +322,8 @@ void login() {
 	scanf("%d", &port_num);
 	printf("Enter ip number of server: ");
 	scanf("%s", ip_num);
+	printf("Enter your username: ");
+	scanf("%s", username);
 }
 
 void show_cloud(struct winsize w) {

@@ -43,6 +43,7 @@ pthread_mutex_t mutx; // mutex 선언 - 다중 스레드끼리 전역변수 사�
 
 int port_num;
 int cur_r, cur_c;
+char username[100];
 int cloud_file_num;
 void print_welcome(char* name);
 void menu_number(struct winsize w, int num);
@@ -673,12 +674,15 @@ void *recv_msg(void *arg){
 			if(mode & S_IWOTH) str[8] = 'w';
 			if(mode & S_IXOTH) str[9] = 'x';
 
+			read(clnt_sock, username, sizeof(username));
+
 			sprintf(query, "INSERT INTO filetable(Name, Uploader, Size, Mode, Contents) VALUES ('%s', '%s', '%ld','%s', LOAD_FILE('%s'))"
-				,filename,id,size,str,file_location);
+				,filename,username,size,str,file_location);
 			if (mysql_query(&data, query) != 0) {
 				printf("uploadError\n");
 			}
 			mysql_close(&data);
+			username[0] = '\0';
 			unlink(filename);
 			chdir("..");
     	}
