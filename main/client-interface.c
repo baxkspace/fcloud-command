@@ -126,10 +126,6 @@ int main(int argc, char **argv) {
 					chdir("./download");
 					char buf[256];
 
-					int str_len = read(clnt_sock, filename, sizeof(filename));
-					if (str_len != -1) {
-						break;
-					}
 					int nbyte = 256;
 					size_t filesize = 0, bufsize = 0;
 					FILE* file = NULL;
@@ -198,6 +194,7 @@ int main(int argc, char **argv) {
 						int fpsize = fread(buf, 1, 256, file);
 						nsize += fpsize;
 						send(clnt_sock, buf, fpsize, 0);
+						usleep(100000);
 					}
 					fclose(file);
 					chdir("..");
@@ -289,36 +286,6 @@ void login() {
 }
 
 void show_cloud(struct winsize w) {
-	move(3, 2);
-	attron(COLOR_PAIR(SELECTED_MENU));
-	printw(" cloud ");
-	attroff(SELECTED_MENU);
-
-	// unselected small
-	move (3, 4+strlen(" cloud "));
-	attron(COLOR_PAIR(UNSELECTED_MENU));
-	printw(" local ");
-	attroff(COLOR_PAIR(UNSELECTED_MENU));
-
-	// ls info
-	move(4, 0);
-	attron(COLOR_PAIR(SELECTED_MENU));
-	for (int i = 0; i < w.ws_col; i++)
-		printw(" ");
-	attroff(COLOR_PAIR(SELECTED_MENU));
-	move(4, 2);
-	attron(COLOR_PAIR(MENU));
-	printw("%-18s %-10s     %-10s %-13s %-17s", "file name", "uploader", "size", "mode", "time");
-
-	move(w.ws_row - 5, 0);
-	for (int i =0; i < w.ws_col; i++) {
-		printw(" ");
-	}
-	attroff(COLOR_PAIR(MENU));
-
-	move(5, 2);
-	make_blank(w);
-	//cloud_list(id, pw);
 	MYSQL data;
 	MYSQL_RES* res;
 	MYSQL_ROW row;
@@ -357,16 +324,46 @@ void show_cloud(struct winsize w) {
     			i++;
     		}
     	}
+    }
+	move(3, 2);
+	attron(COLOR_PAIR(SELECTED_MENU));
+	printw(" cloud ");
+	attroff(SELECTED_MENU);
 
-    	for (int k = 0; k < i; k++){
+	// unselected small
+	move (3, 4+strlen(" cloud "));
+	attron(COLOR_PAIR(UNSELECTED_MENU));
+	printw(" local ");
+	attroff(COLOR_PAIR(UNSELECTED_MENU));
+
+	// ls info
+	move(4, 0);
+	attron(COLOR_PAIR(SELECTED_MENU));
+	for (int i = 0; i < w.ws_col; i++)
+		printw(" ");
+	attroff(COLOR_PAIR(SELECTED_MENU));
+	move(4, 2);
+	attron(COLOR_PAIR(MENU));
+	printw("%-18s %-10s     %-10s %-13s %-17s", "file name", "uploader", "size", "mode", "time");
+
+	move(w.ws_row - 5, 0);
+	for (int i =0; i < w.ws_col; i++) {
+		printw(" ");
+	}
+	attroff(COLOR_PAIR(MENU));
+
+	move(5, 2);
+	make_blank(w);
+	//cloud_list(id, pw);
+
+    // 버퍼 맨 마지막 값 NULL
+    // 받은 메세지 출력
+    for (int k = 0; k < i; k++){
     		file_num++;
     		move(row_num++, 2);
   			printw("%-18s%-16s%-10s%-14s%.17s", buf[k][4], buf[k][3], buf[k][2], buf[k][1], buf[k][0]);
 			printw("\n");	
-  		}
-    }
-    // 버퍼 맨 마지막 값 NULL
-    // 받은 메세지 출력
+  	}
 }
 
 void show_local(struct winsize w) {

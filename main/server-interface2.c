@@ -557,7 +557,7 @@ void *recv_msg(void *arg){
 			
 			char buf[256];
 
-			write(clnt_sock, filename, strlen(filename)+1);
+			//write(clnt_sock, filename, strlen(filename)+1);
 
 			size_t nsize = 0, fsize;
 			size_t fsize2;
@@ -589,7 +589,9 @@ void *recv_msg(void *arg){
 				int fpsize = fread(buf, 1, 256, file);
 				nsize += fpsize;
 				send(clnt_sock, buf, fpsize, 0);
+				usleep(100000);
 			}
+			printf("1123123\n");
 			fclose(file);
 			unlink(filename);
 			chdir("..");
