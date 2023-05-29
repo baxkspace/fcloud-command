@@ -19,8 +19,8 @@
 #define MENU 4
 
 int port_num;
+char ip_num[20];
 int cur_r, cur_c;
-int cloud_file_num;
 void print_welcome(char* name);
 void menu_number(struct winsize w, int num);
 char id[30], pw[100];
@@ -81,16 +81,11 @@ int main(int argc, char **argv) {
 			case 3:
 				load_file_name(download_string, w);
 				scanw("%s", filename);
-				printw("%d", cloud_file_num);
 				if (strcmp(filename, "b") == 0) {
 					move(w.ws_row -2, 2);
 					for(int i = 0; i < w.ws_col; i++)
 						printw(" ");
 					break;
-				}
-				else if (cloud_file_num >= 14) {
-					move(w.ws_row - 1, 2);
-					printw("cloud is full!");
 				}
 				else {
 					data_download(id, pw, filename);
@@ -111,19 +106,19 @@ int main(int argc, char **argv) {
 				else {
 					int op = data_upload(id, pw, filename);
 					move(w.ws_row -2, 2);
-					for(int i = 0; i < w.ws_col; i++)
-						printw(" ");
-				
-					printw("%d", op);
+					/*for(int i = 0; i < w.ws_col; i++)
+						printw(" ");*/
+					init_pair(223, COLOR_CYAN, COLOR_BLACK);
+					attron(COLOR_PAIR(223));
 					if (op == 0) {
-						move(w.ws_row-1, 2);
-						addstr("upload success!");
+						move(w.ws_row-2, 2);
+						printw("upload success!");
 					}
 					else if (op == 1) {
-						sleep(1);
-						addstr("Fail - There is not %s in local!");
+						printw("Fail - There is not %s in local!", filename);
 					}
-					
+					sleep(1);
+					attroff(COLOR_PAIR(223));
 					move(w.ws_row -2, 2);
 					for(int i = 0; i < w.ws_col; i++)
 						printw(" ");
@@ -182,13 +177,10 @@ void menu_number(struct winsize w, int num) {
 }
 
 void login() {
-	printf("Enter your mysql ID: ");
-	scanf("%s", id);
-	printf("Enter password: ");
-	scanf("%s", pw);
-	mysqlConnect(id, pw);
 	printf("Enter port number to open: ");
 	scanf("%d", &port_num);
+	printf("Enter ip number of server: ");
+	scanf("%c", ip_num);
 }
 
 void show_cloud(struct winsize w) {
@@ -221,7 +213,7 @@ void show_cloud(struct winsize w) {
 
 	move(5, 2);
 	make_blank(w);
-	cloud_file_num = cloud_list(id, pw);
+	cloud_list(id, pw);
 
 }
 
@@ -350,7 +342,7 @@ int enter_menu(struct winsize w) {
 }
 
 void make_blank(struct winsize w) {
-	for (int i = 5; i < w.ws_row - 5; i++) {
+	for (int i = 5; i < w.ws_row - 6; i++) {
 		for (int j = 0; j < w.ws_col; j++) 
 		{
 			move(i, j);
