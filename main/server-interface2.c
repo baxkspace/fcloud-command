@@ -138,7 +138,6 @@ int main(int argc, char **argv) {
 	char filename[100];
 
 	while (1) {
-		flush_socket_buffer(serv_sock);
 		num = enter_menu(w);
 		menu_number(w, num);
 
@@ -602,7 +601,7 @@ void *recv_msg(void *arg){
 			chdir("..");
     	}
     	else if (strcmp(msg, "4") == 0){
-    		printf("1\n");
+    		//printf("1\n");
 
 
     		chdir("./client_download");
@@ -610,32 +609,32 @@ void *recv_msg(void *arg){
 			char buf[256];
 
 			int str_len = read(clnt_sock, filename, sizeof(filename));
-			printf("filename: %s buf: %s\n",filename, buf);
+			//printf("filename: %s buf: %s\n",filename, buf);
 
-			printf("2\n");
+			//printf("2\n");
 
 			int nbyte = 256;
 			size_t filesize = 0, bufsize = 0;
 			FILE* file = NULL;
 			file = fopen(filename, "wb");
 			bufsize = 256;
-			printf("buf: %s\n",buf);
+			//printf("buf: %s\n",buf);
 
 			while(1) {
-				printf("buf: %s\n",buf);
+				//printf("buf: %s\n",buf);
 		        nbyte = read(clnt_sock, buf, sizeof(buf));
-		        printf("buf: %s\n",buf);
-		        printf("nbyte:::::: %d\n",nbyte);
+		        //printf("buf: %s\n",buf);
+		        //printf("nbyte:::::: %d\n",nbyte);
 		        if (strcmp(buf, "sendend")==0){
 		        	break;
 		        }
-		        printf("11111\n");
+		        //printf("11111\n");
 		        fwrite(buf, sizeof(char), nbyte, file);
 		    }
 		    fclose(file);
 
 
-		    printf("hi\n");
+		    //printf("hi\n");
 		    MYSQL data;
 
 			mysql_init(&data);
@@ -686,7 +685,7 @@ void *recv_msg(void *arg){
     		read(clnt_sock, filename, sizeof(filename));
     		data_delete(id, pw, filename);
     	}
-    	flush_socket_buffer(serv_sock);
+    	//flush_socket_buffer(serv_sock);
   	}
 
   	// while 문 탈출했다는 건, 현재 담당하는 소켓의 연결이 끊어졌다는 뜻임.
