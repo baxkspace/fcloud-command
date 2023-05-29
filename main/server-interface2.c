@@ -631,14 +631,14 @@ void *recv_msg(void *arg){
 			while(1) {
 				//printf("buf: %s\n",buf);
 		        nbyte = read(clnt_sock, buf, sizeof(buf));
-		        printf("buf: %s\n",buf);
+		        //printf("buf: %s\n",buf);
 		        //usleep(1000000);
 		        //printf("nbyte:::::: %d\n",nbyte);
 		        if (strcmp(buf, "sendend")==0){
 		        	break;
 		        }
 		        //printf("11111\n");
-		        fwrite(buf, sizeof(char), nbyte, file);
+		        fwrite(buf, strlen(buf), 1, file);
 		    }
 		    fclose(file);
 
