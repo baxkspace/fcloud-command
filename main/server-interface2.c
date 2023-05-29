@@ -539,7 +539,6 @@ void *recv_msg(void *arg){
 
 			char filename[256];
 			read(clnt_sock, filename, sizeof(filename));
-			printf("filename : %s\n",filename);
 
 			MYSQL_RES* res;
 			MYSQL_ROW row;
@@ -554,7 +553,7 @@ void *recv_msg(void *arg){
 			res = mysql_store_result(&data);
 			while ((row = mysql_fetch_row(res))) {
 				if(strcmp(row[4], filename) == 0){
-					fwrite(row[5], sizeof(row[5]), 1, f);
+					fwrite(row[5], strlen(row[5]), 1, f);
 					fclose(f);
 					break;
 				}

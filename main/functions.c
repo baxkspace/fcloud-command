@@ -67,7 +67,7 @@ int data_download(char* id, char* pw, char* filename){
 	char path[256];
 
 	chdir("./download");
-	getcwd(path, sizeof(path));
+	/*getcwd(path, sizeof(path));
 	if ((dir_ptr = opendir(path)) == NULL)
 		fprintf(stderr, "cannot open %s\n", path);
 	else {
@@ -80,7 +80,7 @@ int data_download(char* id, char* pw, char* filename){
 			}
 		}
 	}
-	closedir(dir_ptr);
+	closedir(dir_ptr);*/
 
 	mysql_init(&data);
 	mysql_real_connect(&data, "localhost", id, pw, NULL, 0, NULL, 0);
@@ -88,7 +88,7 @@ int data_download(char* id, char* pw, char* filename){
 	if (mysql_query(&data, "USE fcloud")) {
 		printf("%s\n", mysql_error(&data));
 	}
-	chdir("./download");
+	//chdir("./download");
 
 	MYSQL_RES* res;
 	MYSQL_ROW row;
@@ -103,11 +103,11 @@ int data_download(char* id, char* pw, char* filename){
 	res = mysql_store_result(&data);
 	while ((row = mysql_fetch_row(res))) {
 		if(strcmp(row[4], filename) == 0){
-			fwrite(row[5], sizeof(row[5]), 1, f);
-			fclose(f);
+			fwrite(row[5], strlen(row[5]), 1, f);
 			break;
 		}
 	}
+	fclose(f);
 	chdir("..");
 	return 0;
 
