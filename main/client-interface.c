@@ -194,7 +194,7 @@ int main(int argc, char **argv) {
 						// 1byte * 256 count = 256byte => buf[256];
 						int fpsize = fread(buf, 1, 256, file);
 						nsize += fpsize;
-						printf("nsize: %d, fpsize: %d\n",nsize. fpsize);
+						printf("nsize: %d, fpsize: %d\n",nsize, fpsize);
 						write(clnt_sock, buf, fpsize);
 						printf("buf: %s\n",buf);
 						sleep(1);
