@@ -46,6 +46,7 @@ void local_list(char dirname[]);
 void dostat(char* filename);
 void show_file_info(char* filename, struct stat* info_p);
 void mode_to_letters(int mode, char str[]);
+void voidBuffer(int sock);
 
 int main(int argc, char **argv) {
 	
@@ -86,8 +87,6 @@ int main(int argc, char **argv) {
 	print_welcome(id);
 
 	show_cloud(w);
-
-
 
 
 
@@ -197,7 +196,6 @@ int main(int argc, char **argv) {
 						printf("nsize: %d, fpsize: %d\n",nsize, fpsize);
 						write(clnt_sock, buf, fpsize);
 						printf("buf: %s\n",buf);
-						sleep(1);
 					}
 					char msgdone[] = "sendend";
 					buf[0] = '\0';
@@ -205,7 +203,7 @@ int main(int argc, char **argv) {
 					fclose(file);
 					chdir("..");
 
-
+					voidBuffer(clnt_sock);
 
 					move(w.ws_row -2, 2);
 					/*for(int i = 0; i < w.ws_col; i++)
@@ -587,4 +585,11 @@ void error_handling(char* message){
 	fputs(message, stderr);
 	fputc('\n', stderr);
 	exit(1);
+}
+
+void voidBuffer(int sock){
+	u_long tmpl,i;
+    char tmpc;
+	ioctlsocket(sock,FIONREAD,&tmpl);
+    for(i=0;i<tmpl;i++) recv(s, &tmpc,sizeof(char),0);
 }
