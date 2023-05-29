@@ -195,7 +195,7 @@ int main(int argc, char **argv) {
 						nsize += fpsize;
 						write(clnt_sock, buf, fpsize);
 						printf("buf: %s\n",buf);
-						usleep(1500000);
+						sleep(1);
 					}
 					char msgdone[] = "sendend";
 					buf[0] = '\0';
