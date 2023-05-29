@@ -134,6 +134,7 @@ int main(int argc, char **argv) {
 
 					while(1) {
 				        nbyte = read(clnt_sock, buf, sizeof(buf));
+				        printf("buf: %s\n",buf);
 				        if (strcmp(buf, "sendend"))
 				        	break;
 				        printf("nbyte: %d\n",nbyte);
