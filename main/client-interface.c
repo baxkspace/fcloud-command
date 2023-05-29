@@ -13,7 +13,7 @@
 #include <mysql.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
-#include <sys/ioctl>
+#include <sys/ioctl.h>
 #include "mysqldb.h"
 #include "functions.h"
 
