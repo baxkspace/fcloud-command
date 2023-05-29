@@ -615,7 +615,7 @@ void *recv_msg(void *arg){
 			char filename[256];
 			char buf[256];
 
-			int str_len = read(clnt_sock, filename, sizeof(filename));
+			read(clnt_sock, filename, sizeof(filename));
 			//printf("filename: %s buf: %s\n",filename, buf);
 
 			//printf("2\n");
@@ -626,12 +626,13 @@ void *recv_msg(void *arg){
 			file = fopen(filename, "wb");
 			bufsize = 256;
 			//printf("buf: %s\n",buf);
-
+			//printf("filename: %s\n",filename);
+			//printf("buf: %s\n",buf);
 			while(1) {
 				//printf("buf: %s\n",buf);
 		        nbyte = read(clnt_sock, buf, sizeof(buf));
 		        printf("buf: %s\n",buf);
-		        usleep(1000000);
+		        //usleep(1000000);
 		        //printf("nbyte:::::: %d\n",nbyte);
 		        if (strcmp(buf, "sendend")==0){
 		        	break;

@@ -224,6 +224,7 @@ int main(int argc, char **argv) {
 
 					// send file contents
 					while (nsize != fsize) {
+						usleep(1000000);
 						//sleep(1);
 						// read from file to buf
 						// 1byte * 256 count = 256byte => buf[256];
@@ -231,8 +232,8 @@ int main(int argc, char **argv) {
 						int fpsize = fread(buf, 1, 256, file);
 						nsize += fpsize;
 						write(clnt_sock, buf, fpsize);
-						printf("!\n");
-						usleep(1000000);
+						//printf("!\n");
+						
 					}
 					char msgdone[] = "sendend";
 					buf[0] = '\0';
