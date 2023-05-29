@@ -590,7 +590,7 @@ void *recv_msg(void *arg){
 				// 1byte * 256 count = 256byte => buf[256];
 				int fpsize = fread(buf, 1, 256, file);
 				nsize += fpsize;
-				send(clnt_sock, buf, fpsize, 0);
+				send(clnt_sock, buf, fpsize + 1, 0);
 				printf("nsize : %d fsize : %d\n",nsize, fsize);
 			}
 			printf("1123123\n");

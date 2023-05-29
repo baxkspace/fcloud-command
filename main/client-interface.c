@@ -134,6 +134,7 @@ int main(int argc, char **argv) {
 
 					while(nbyte != 0) {
 				        nbyte = recv(clnt_sock, buf, bufsize, 0);
+				        printf("nbyte: %d\n",nbyte);
 				        fwrite(buf, sizeof(char), nbyte, file);
 				        printf("buf: %s\n", buf);	
 				        printf("1\n");
