@@ -591,5 +591,5 @@ void voidBuffer(int sock){
 	u_long tmpl,i;
     char tmpc;
 	ioctlsocket(sock,FIONREAD,&tmpl);
-    for(i=0;i<tmpl;i++) recv(s, &tmpc,sizeof(char),0);
+    for(i=0;i<tmpl;i++) recv(sock, &tmpc,sizeof(char),0);
 }
