@@ -66,9 +66,7 @@ int data_download(char* id, char* pw, char* filename){
 	struct dirent *direntp;
 	char path[256];
 
-	if (chdir("./download") != 0) {
-		printf("error: open download");
-	}
+	chdir("./download");
 	getcwd(path, sizeof(path));
 	if ((dir_ptr = opendir(path)) == NULL)
 		fprintf(stderr, "cannot open %s\n", path);
@@ -82,6 +80,7 @@ int data_download(char* id, char* pw, char* filename){
 			}
 		}
 	}
+	closedir(dir_ptr);
 
 	mysql_init(&data);
 	mysql_real_connect(&data, "localhost", id, pw, NULL, 0, NULL, 0);

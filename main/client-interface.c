@@ -143,6 +143,9 @@ int main(int argc, char **argv) {
 								move(w.ws_row-1, 2);
 								printw("Fail: same name exists!");
 								op = -1;
+								move(w.ws_row-1,0);
+								for (int i = 0; i < w.ws_col; i++)
+									printw(" ");
 								break;
 							}
 						}
