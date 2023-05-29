@@ -75,7 +75,7 @@ int main(int argc, char **argv) {
 	if(connect(clnt_sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) == -1)
 		error_handling("connect error");
 	
-
+	read(clnt_sock, id, sizeof(id));
 	initscr();
 	crmode();
 	start_color();
