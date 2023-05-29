@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
 
 	login();
 
-	write(clnt_sock, username, strlen(username)+1);
+
 
 	memset(&serv_addr, 0, sizeof(serv_addr));
 	serv_addr.sin_family = AF_INET;
@@ -79,7 +79,8 @@ int main(int argc, char **argv) {
 		error_handling("connect error");
 	
 	read(clnt_sock, id, sizeof(id));
-
+	write(clnt_sock, username, strlen(username)+1);
+	
 	initscr();
 	crmode();
 	start_color();
