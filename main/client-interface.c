@@ -120,7 +120,7 @@ int main(int argc, char **argv) {
 					char msg[] = "3";
 					//data_download(id, pw, filename);
 					write(clnt_sock, msg, strlen(msg)+1);
-					usleep(200000);
+					usleep(100000);
 					write(clnt_sock, filename, strlen(filename)+1);
 
 					chdir("./download");
@@ -134,7 +134,8 @@ int main(int argc, char **argv) {
 
 					while(nbyte != 0) {
 				        nbyte = recv(clnt_sock, buf, bufsize, 0);
-				        fwrite(buf, sizeof(char), nbyte, file);		
+				        fwrite(buf, sizeof(char), nbyte, file);	
+				        printf("1\n");
 				    }
 				    fclose(file);
 				    chdir("..");

@@ -531,8 +531,10 @@ void *recv_msg(void *arg){
 				printf("%s\n", mysql_error(&data));
 			}
 			chdir("./client_download");
+
 			char filename[256];
 			read(clnt_sock, filename, sizeof(filename));
+			printf("filename : %s\n",filename);
 
 			MYSQL_RES* res;
 			MYSQL_ROW row;
@@ -589,11 +591,12 @@ void *recv_msg(void *arg){
 				int fpsize = fread(buf, 1, 256, file);
 				nsize += fpsize;
 				send(clnt_sock, buf, fpsize, 0);
+				printf("222\n");
 				usleep(100000);
 			}
 			printf("1123123\n");
 			fclose(file);
-			unlink(filename);
+			//unlink(filename);
 			chdir("..");
     	}
     	else if (strcmp(msg, "4") == 0){
