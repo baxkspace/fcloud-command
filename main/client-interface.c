@@ -68,6 +68,8 @@ int main(int argc, char **argv) {
 
 	login();
 
+	write(clnt_sock, username, strlen(username)+1);
+
 	memset(&serv_addr, 0, sizeof(serv_addr));
 	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_addr.s_addr = inet_addr(ip_num);
@@ -181,7 +183,7 @@ int main(int argc, char **argv) {
 						printw(" ");
 					break;
 				}
-			case 4: 
+			case 4:
 				chdir("./download");
 				load_file_name(upload_string, w);
 				scanw("%s", filename);
@@ -238,7 +240,6 @@ int main(int argc, char **argv) {
 					fclose(file);
 					chdir("..");
 
-					write(clnt_sock, username, strlen(username)+1);
 					move(w.ws_row -2, 2);
 					/*for(int i = 0; i < w.ws_col; i++)
 						printw(" ");*/

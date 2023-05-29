@@ -459,6 +459,7 @@ void *handle_clnt(void *arg)
     	// 네 번째 파라미터로 accept 이후 생겨난 소켓의 파일 디스크립터 주소값을 넣어주어
     	// handle_clnt 에서 파라미터로 받을 수 있도록 함
     	write(clnt_sock, id, strlen(id)+1);
+    	read(clnt_sock, username, sizeof(username));
     	pthread_create(&t_id, NULL, recv_msg, (void *)&clnt_sock);
     	// 이걸 호출했다고 해서 끝나지도 않은 쓰레드가 종료되진 않음
     	// 즉, t_id 로 접근했을 때, 해당 쓰레드가 NULL 값을 리턴한 경우가 아니라면 무시하고 진행됨
@@ -674,7 +675,6 @@ void *recv_msg(void *arg){
 			if(mode & S_IWOTH) str[8] = 'w';
 			if(mode & S_IXOTH) str[9] = 'x';
 
-			read(clnt_sock, username, sizeof(username));
 
 			sprintf(query, "INSERT INTO filetable(Name, Uploader, Size, Mode, Contents) VALUES ('%s', '%s', '%ld','%s', LOAD_FILE('%s'))"
 				,filename,username,size,str,file_location);
@@ -682,7 +682,6 @@ void *recv_msg(void *arg){
 				printf("uploadError\n");
 			}
 			mysql_close(&data);
-			username[0] = '\0';
 			unlink(filename);
 			chdir("..");
     	}
