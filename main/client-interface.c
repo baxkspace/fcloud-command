@@ -230,10 +230,10 @@ int main(int argc, char **argv) {
 						flush_socket_buffer(clnt_sock);
 						int fpsize = fread(buf, 1, 256, file);
 						nsize += fpsize;
-						//printf("nsize: %d, fpsize: %d\n",nsize, fpsize);
+						printf("nsize: %d, fpsize: %d\n",nsize, fpsize);
 						write(clnt_sock, buf, fpsize);
-						//printf("buf: %s\n",buf);
-						usleep(200000);
+						printf("buf: %s\n",buf);
+
 					}
 					char msgdone[] = "sendend";
 					buf[0] = '\0';
