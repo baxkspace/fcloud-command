@@ -189,11 +189,12 @@ int main(int argc, char **argv) {
 
 					// send file contents
 					while (nsize != fsize) {
-						sleep(1);
+						//sleep(1);
 						// read from file to buf
 						// 1byte * 256 count = 256byte => buf[256];
 						int fpsize = fread(buf, 1, 256, file);
 						nsize += fpsize;
+						printf("nsize: %d, fpsize: %d\n",nsize. fpsize);
 						write(clnt_sock, buf, fpsize);
 						printf("buf: %s\n",buf);
 						sleep(1);
