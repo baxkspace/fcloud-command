@@ -138,7 +138,7 @@ int main(int argc, char **argv) {
 				        if (strcmp(buf, "sendend"))
 				        	break;
 				        printf("nbyte: %d\n",nbyte);
-				        fwrite(buf, sizeof(char), nbyte, file);
+				        fwrite(buf, sizeof(buf), 1, file);
 				        printf("buf: %s\n", buf);	
 				        printf("1\n");
 				    }
