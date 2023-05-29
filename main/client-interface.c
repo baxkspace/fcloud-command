@@ -79,8 +79,7 @@ int main(int argc, char **argv) {
 		error_handling("connect error");
 	
 	read(clnt_sock, id, sizeof(id));
-	write(clnt_sock, username, strlen(username)+1);
-	
+
 	initscr();
 	crmode();
 	start_color();
@@ -324,8 +323,7 @@ void login() {
 	scanf("%d", &port_num);
 	printf("Enter ip number of server: ");
 	scanf("%s", ip_num);
-	printf("Enter your username: ");
-	scanf("%s", username);
+	printf("loading...");
 }
 
 void show_cloud(struct winsize w) {
