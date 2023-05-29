@@ -94,12 +94,14 @@ int main(int argc, char **argv) {
 	signal(SIGWINCH, SIG_IGN);
 	if (access("./download", 0) == -1)
 		mkdir("download", 0755);
-
+	if (access("./client_download", 0) == -1)
+		mkdir("client_download", 0755);
+	login();
 	// IPv4 , IP, Port 할당
 	memset(&serv_adr, 0, sizeof(serv_adr));
   	serv_adr.sin_family = AF_INET;
   	serv_adr.sin_addr.s_addr = htonl(INADDR_ANY);
-	login();
+	
 	serv_adr.sin_port = htons(port_num);
 
 	// 주소 할당
@@ -464,7 +466,7 @@ void *recv_msg(void *arg){
   	struct sockaddr_in clnt_adr;
   	int clnt_adr_sz;
   	char msg[100];
-  	char mmm[100] = "hello\n";
+
   	int str_len;
   	// 소켓 파일 디스크립터가 void 포인터로 들어왔으므로, int 로 형변환
   	int clnt_sock = *((int *)arg);
@@ -473,6 +475,7 @@ void *recv_msg(void *arg){
   // EOF 를 보내는 순간은 언제인가? 클라이언트에서, 소켓을 close 했을 때이다!
   // 즉, 클라이언트가 접속을 하고 있는 동안에, while 문을 벗어나진 않는다.
   	while ((str_len = read(clnt_sock, msg, sizeof(msg))) != 0){
+
     	if (strcmp(msg, "1") == 0){
     		//write(clnt_sock, mmm, strlen(mmm) + 1);
     		MYSQL data;
@@ -516,6 +519,146 @@ void *recv_msg(void *arg){
 			write(clnt_sock, message2, strlen(message2)+1);
 			mysql_free_result(res);
 			mysql_close(&data);
+    	}
+    	else if (strcmp(msg, "3") == 0){
+    		FILE* f = NULL;	
+			MYSQL data;
+
+			mysql_init(&data);
+			mysql_real_connect(&data, "localhost", id, pw, NULL, 0, NULL, 0);
+
+			if (mysql_query(&data, "USE fcloud")) {
+				printf("%s\n", mysql_error(&data));
+			}
+			chdir("./client_download");
+			char filename[256];
+			read(clnt_sock, filename, sizeof(filename));
+
+			MYSQL_RES* res;
+			MYSQL_ROW row;
+			char file_location[100];
+			getcwd(file_location, 100);
+			sprintf(file_location, "%s/%s",file_location, filename);	
+			if (mysql_query(&data, "SELECT Time,Mode,Size,Uploader,Name,Contents FROM filetable")) {
+				printf("%s\n", mysql_error(&data));
+			}
+			f = fopen(file_location, "wb");
+	
+			res = mysql_store_result(&data);
+			while ((row = mysql_fetch_row(res))) {
+				if(strcmp(row[4], filename) == 0){
+					fwrite(row[5], sizeof(row[5]), 1, f);
+					fclose(f);
+					break;
+				}
+			}
+			close(f);
+
+			
+			char buf[256];
+
+			write(clnt_sock, filename, strlen(filename)+1);
+
+			size_t nsize = 0, fsize;
+			size_t fsize2;
+
+	
+    		FILE* file = NULL;
+
+    		/* 전송할 파일 이름을 작성합니다 */
+			if((file = fopen(filename, "rb")) == NULL){
+				printf("file not exists\n");
+			}
+
+    		/* 파일 크기 계산 */
+		    // move file pointer to end
+			fseek(file, 0, SEEK_END);
+			// calculate file size
+			fsize=ftell(file);	// move file pointer to first
+			fseek(file, 0, SEEK_SET);
+			
+			// send file size first
+			 //fsize2 = htonl(fsize);
+			// send file size
+			 //send(clnt_sock, &fsize2, sizeof(fsize), 0);
+
+			// send file contents
+			while (nsize != fsize) {
+				// read from file to buf
+				// 1byte * 256 count = 256byte => buf[256];
+				int fpsize = fread(buf, 1, 256, file);
+				nsize += fpsize;
+				send(clnt_sock, buf, fpsize, 0);
+			}
+			fclose(file);
+			unlink(filename);
+			chdir("..");
+    	}
+    	else if (strcmp(msg, "4") == 0){
+    		chdir("./client_download");
+    		char filename[256];
+			char buf[256];
+
+			int str_len = read(clnt_sock, filename, sizeof(filename));
+			if (str_len != -1) {
+				break;
+			}
+			int nbyte = 256;
+			size_t filesize = 0, bufsize = 0;
+			FILE* file = NULL;
+			file = fopen(filename, "wb");
+			bufsize = 256;
+
+			while(nbyte != 0) {
+		        nbyte = recv(clnt_sock, buf, bufsize, 0);
+		        fwrite(buf, sizeof(char), nbyte, file);		
+		    }
+		    fclose(file);
+
+		    MYSQL data;
+
+			mysql_init(&data);
+			mysql_real_connect(&data, "localhost", id, pw, NULL, 0, NULL, 0);
+
+			if (mysql_query(&data, "USE fcloud")) {
+				printf("%s\n", mysql_error(&data));
+			}
+			
+			char query[255];
+			char file_location[100];
+			chdir("./client_download");
+			getcwd(file_location, 100);
+			sprintf(file_location, "%s/%s",file_location, filename);
+
+			struct stat info;
+			stat(filename, &info);
+			int mode = info.st_mode;
+			char str[] = "----------";
+			long size = (long)info.st_size;
+			if (S_ISDIR(mode)) str[0] = 'd';
+			if (S_ISCHR(mode)) str[0] = 'c';
+			if (S_ISBLK(mode)) str[0] = 'b';
+
+			if(mode & S_IRUSR) str[1] = 'r';
+			if(mode & S_IWUSR) str[2] = 'w';
+			if(mode & S_IXUSR) str[3] = 'x';
+
+			if(mode & S_IRGRP) str[4] = 'r';
+			if(mode & S_IWGRP) str[5] = 'w';
+			if(mode & S_IXGRP) str[6] = 'x';
+
+			if(mode & S_IROTH) str[7] = 'r';
+			if(mode & S_IWOTH) str[8] = 'w';
+			if(mode & S_IXOTH) str[9] = 'x';
+
+			sprintf(query, "INSERT INTO filetable(Name, Uploader, Size, Mode, Contents) VALUES ('%s', '%s', '%ld','%s', LOAD_FILE('%s'))"
+				,filename,id,size,str,file_location);
+			if (mysql_query(&data, query) != 0) {
+				printf("uploadError\n");
+			}
+			mysql_close(&data);
+			unlink(filename);
+			chdir("..");
     	}
   	}
 

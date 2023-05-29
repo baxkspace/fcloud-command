@@ -53,6 +53,7 @@ int data_upload(char* id, char* pw, char* filename){
 		return 1;
 	}
 	mysql_close(&data);
+	chdir("..");
 	return 0;
 } 
 
@@ -86,6 +87,7 @@ void data_download(char* id, char* pw, char* filename){
 			break;
 		}
 	}
+	chdir("..");
 
 }//done
 
