@@ -16,3 +16,5 @@
   * sudo utf allow <포트번호> 로 방화벽 열기
   * 리눅스를 가상머신에서 bridge 모드로 들어가야 함
   * gcc -o 실행파일 코드파일 -I/usr/include/mysql -lmysqlclient -L/usr/lib -lcurses -lpthread
+ 
+* 실제 demo file ㅡ server-interface2.c / client-interface.c
