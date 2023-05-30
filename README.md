@@ -1,6 +1,9 @@
 ## ☁️ fcloud-command ##
 #### *2023 system programming term project*
 ---
+* 발표 자료 ㅡ https://www.miricanvas.com/v/123kn5o
+* 시연 영상 ㅡ https://www.youtube.com/watch?v=3P6TIERR9P4
+
 
 * 접속/연결 시 주의 사항
   * server 오픈 시 mysql 해당 로그인 계정 권한을 열어 두어야 함
